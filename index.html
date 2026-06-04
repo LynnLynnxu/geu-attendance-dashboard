@@ -208,6 +208,17 @@ canvas { max-height: 340px; }
       <div style="max-height:380px;overflow-y:auto" id="otTop15Table"></div>
     </div>
   </div>
+  <!-- Charts row 3: Weekly avg OT -->
+  <div class="grid2">
+    <div class="card">
+      <h3>个人每周平均加班时长排名 <span style="font-size:11px;color:#999;font-weight:400">（Top20）</span></h3>
+      <div class="chart-wrap"><canvas id="chartOtWeeklyPerson"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>五级部门每周人均加班时长排名</h3>
+      <div class="chart-wrap"><canvas id="chartOtWeeklyOrg5"></canvas></div>
+    </div>
+  </div>
 </div>
 
 <!-- 4. 疑似风险模式 -->
@@ -1758,7 +1769,952 @@ const DATA = {
         "month": "2026-05",
         "overtime": 2921.9
       }
-    ]
+    ],
+    "individual_weekly_avg": [
+      {
+        "name": "卢博文",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 139.0,
+        "weekly_avg": 15.4
+      },
+      {
+        "name": "蒋秋柏",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 133.1,
+        "weekly_avg": 14.8
+      },
+      {
+        "name": "卢明敏",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 125.2,
+        "weekly_avg": 13.9
+      },
+      {
+        "name": "彭海龙",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 123.1,
+        "weekly_avg": 13.7
+      },
+      {
+        "name": "刘思艳",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 118.5,
+        "weekly_avg": 13.2
+      },
+      {
+        "name": "赵潘婷",
+        "org4": "数据分析组",
+        "org5": "未知",
+        "total_ot": 113.5,
+        "weekly_avg": 12.6
+      },
+      {
+        "name": "许源钦",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 109.4,
+        "weekly_avg": 12.2
+      },
+      {
+        "name": "廖杰",
+        "org4": "中转质控交付组",
+        "org5": "网络质控研发组",
+        "total_ot": 108.5,
+        "weekly_avg": 12.1
+      },
+      {
+        "name": "廖祥",
+        "org4": "中转质控交付组",
+        "org5": "揽收运输研发组",
+        "total_ot": 108.4,
+        "weekly_avg": 12.0
+      },
+      {
+        "name": "陈庆标",
+        "org4": "中转质控交付组",
+        "org5": "客户订单研发组",
+        "total_ot": 106.1,
+        "weekly_avg": 11.8
+      },
+      {
+        "name": "周鹊伟",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 105.9,
+        "weekly_avg": 11.8
+      },
+      {
+        "name": "龙垒",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 102.2,
+        "weekly_avg": 11.4
+      },
+      {
+        "name": "李孝德",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 96.5,
+        "weekly_avg": 10.7
+      },
+      {
+        "name": "别少雄",
+        "org4": "中转质控交付组",
+        "org5": "客户订单研发组",
+        "total_ot": 92.8,
+        "weekly_avg": 10.3
+      },
+      {
+        "name": "魏垚鑫",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 90.5,
+        "weekly_avg": 10.1
+      },
+      {
+        "name": "石新亮",
+        "org4": "中转质控交付组",
+        "org5": "客户订单研发组",
+        "total_ot": 88.9,
+        "weekly_avg": 9.9
+      },
+      {
+        "name": "伍权",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 88.5,
+        "weekly_avg": 9.8
+      },
+      {
+        "name": "陈少平",
+        "org4": "中转质控交付组",
+        "org5": "揽收运输研发组",
+        "total_ot": 87.5,
+        "weekly_avg": 9.7
+      },
+      {
+        "name": "杨华",
+        "org4": "中转质控交付组",
+        "org5": "揽收运输研发组",
+        "total_ot": 85.9,
+        "weekly_avg": 9.5
+      },
+      {
+        "name": "黎汉权",
+        "org4": "数据分析组",
+        "org5": "未知",
+        "total_ot": 85.5,
+        "weekly_avg": 9.5
+      },
+      {
+        "name": "陈绍鹏",
+        "org4": "中转质控交付组",
+        "org5": "网络质控研发组",
+        "total_ot": 83.3,
+        "weekly_avg": 9.3
+      },
+      {
+        "name": "陈健芬",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 82.1,
+        "weekly_avg": 9.1
+      },
+      {
+        "name": "张润锋",
+        "org4": "中转质控交付组",
+        "org5": "未知",
+        "total_ot": 81.7,
+        "weekly_avg": 9.1
+      },
+      {
+        "name": "杨进基",
+        "org4": "终端客服交付组",
+        "org5": "终端运营研发组",
+        "total_ot": 79.2,
+        "weekly_avg": 8.8
+      },
+      {
+        "name": "李日锋",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 79.0,
+        "weekly_avg": 8.8
+      },
+      {
+        "name": "张培铭",
+        "org4": "终端客服交付组",
+        "org5": "终端运营研发组",
+        "total_ot": 76.2,
+        "weekly_avg": 8.5
+      },
+      {
+        "name": "苏玲玲",
+        "org4": "技术支持组",
+        "org5": "未知",
+        "total_ot": 75.4,
+        "weekly_avg": 8.4
+      },
+      {
+        "name": "李丹",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 74.4,
+        "weekly_avg": 8.3
+      },
+      {
+        "name": "张亮华",
+        "org4": "终端客服交付组",
+        "org5": "未知",
+        "total_ot": 73.9,
+        "weekly_avg": 8.2
+      },
+      {
+        "name": "刘俊杰",
+        "org4": "中转质控交付组",
+        "org5": "网络质控研发组",
+        "total_ot": 73.5,
+        "weekly_avg": 8.2
+      },
+      {
+        "name": "陈华",
+        "org4": "数据分析组",
+        "org5": "未知",
+        "total_ot": 72.6,
+        "weekly_avg": 8.1
+      },
+      {
+        "name": "熊振东",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 72.5,
+        "weekly_avg": 8.1
+      },
+      {
+        "name": "刘梅",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 72.0,
+        "weekly_avg": 8.0
+      },
+      {
+        "name": "罗豪宇",
+        "org4": "中转质控交付组",
+        "org5": "客户订单研发组",
+        "total_ot": 70.9,
+        "weekly_avg": 7.9
+      },
+      {
+        "name": "黄龙",
+        "org4": "中转质控交付组",
+        "org5": "客户订单研发组",
+        "total_ot": 70.2,
+        "weekly_avg": 7.8
+      },
+      {
+        "name": "陈振阳",
+        "org4": "终端客服交付组",
+        "org5": "终端运营研发组",
+        "total_ot": 70.1,
+        "weekly_avg": 7.8
+      },
+      {
+        "name": "张伟真",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 69.8,
+        "weekly_avg": 7.8
+      },
+      {
+        "name": "李灿鑫",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 68.5,
+        "weekly_avg": 7.6
+      },
+      {
+        "name": "胡新",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 67.9,
+        "weekly_avg": 7.5
+      },
+      {
+        "name": "黄明坤",
+        "org4": "终端客服交付组",
+        "org5": "终端运营研发组",
+        "total_ot": 66.9,
+        "weekly_avg": 7.4
+      },
+      {
+        "name": "张锐",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 66.2,
+        "weekly_avg": 7.4
+      },
+      {
+        "name": "邓阳智",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 65.3,
+        "weekly_avg": 7.3
+      },
+      {
+        "name": "谢威纯",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 63.0,
+        "weekly_avg": 7.0
+      },
+      {
+        "name": "黎达杰",
+        "org4": "数据分析组",
+        "org5": "未知",
+        "total_ot": 62.5,
+        "weekly_avg": 6.9
+      },
+      {
+        "name": "谌佳美",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 60.4,
+        "weekly_avg": 6.7
+      },
+      {
+        "name": "陈益裕",
+        "org4": "中转质控交付组",
+        "org5": "客户订单研发组",
+        "total_ot": 60.4,
+        "weekly_avg": 6.7
+      },
+      {
+        "name": "赵振",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 60.0,
+        "weekly_avg": 6.7
+      },
+      {
+        "name": "钟育文",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 59.9,
+        "weekly_avg": 6.7
+      },
+      {
+        "name": "邓志敏",
+        "org4": "业务流程管理组",
+        "org5": "未知",
+        "total_ot": 59.8,
+        "weekly_avg": 6.6
+      },
+      {
+        "name": "刘建镕",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 59.1,
+        "weekly_avg": 6.6
+      },
+      {
+        "name": "郑鸿亮",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 58.9,
+        "weekly_avg": 6.5
+      },
+      {
+        "name": "张昆",
+        "org4": "项目与运营管理组",
+        "org5": "未知",
+        "total_ot": 58.7,
+        "weekly_avg": 6.5
+      },
+      {
+        "name": "韩勇",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 58.6,
+        "weekly_avg": 6.5
+      },
+      {
+        "name": "李田辉",
+        "org4": "中转质控交付组",
+        "org5": "网络质控研发组",
+        "total_ot": 58.0,
+        "weekly_avg": 6.4
+      },
+      {
+        "name": "刘名卓",
+        "org4": "数据分析组",
+        "org5": "未知",
+        "total_ot": 57.9,
+        "weekly_avg": 6.4
+      },
+      {
+        "name": "曹娱",
+        "org4": "业务解决方案组",
+        "org5": "未知",
+        "total_ot": 57.0,
+        "weekly_avg": 6.3
+      },
+      {
+        "name": "常玉峰",
+        "org4": "业务解决方案组",
+        "org5": "未知",
+        "total_ot": 56.9,
+        "weekly_avg": 6.3
+      },
+      {
+        "name": "秦文凯",
+        "org4": "中转质控交付组",
+        "org5": "客户订单研发组",
+        "total_ot": 55.9,
+        "weekly_avg": 6.2
+      },
+      {
+        "name": "郑家骏",
+        "org4": "数据分析组",
+        "org5": "未知",
+        "total_ot": 55.8,
+        "weekly_avg": 6.2
+      },
+      {
+        "name": "刘艳",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 55.3,
+        "weekly_avg": 6.1
+      },
+      {
+        "name": "史蒂文",
+        "org4": "数据分析组",
+        "org5": "未知",
+        "total_ot": 55.0,
+        "weekly_avg": 6.1
+      },
+      {
+        "name": "袁康乐",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 55.0,
+        "weekly_avg": 6.1
+      },
+      {
+        "name": "黎景辉",
+        "org4": "系统架构组",
+        "org5": "未知",
+        "total_ot": 52.3,
+        "weekly_avg": 5.8
+      },
+      {
+        "name": "杨薇薇",
+        "org4": "中转质控交付组",
+        "org5": "网络质控研发组",
+        "total_ot": 50.7,
+        "weekly_avg": 5.6
+      },
+      {
+        "name": "陈镇华",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 50.1,
+        "weekly_avg": 5.6
+      },
+      {
+        "name": "陈洁桐",
+        "org4": "中转质控交付组",
+        "org5": "客户订单研发组",
+        "total_ot": 50.0,
+        "weekly_avg": 5.6
+      },
+      {
+        "name": "刘力",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 50.0,
+        "weekly_avg": 5.6
+      },
+      {
+        "name": "刘洋",
+        "org4": "终端客服交付组",
+        "org5": "终端运营研发组",
+        "total_ot": 49.6,
+        "weekly_avg": 5.5
+      },
+      {
+        "name": "韦文山",
+        "org4": "中转质控交付组",
+        "org5": "网络质控研发组",
+        "total_ot": 48.9,
+        "weekly_avg": 5.4
+      },
+      {
+        "name": "黄雪娟",
+        "org4": "项目与运营管理组",
+        "org5": "未知",
+        "total_ot": 46.7,
+        "weekly_avg": 5.2
+      },
+      {
+        "name": "刘立群",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 45.1,
+        "weekly_avg": 5.0
+      },
+      {
+        "name": "邹韬明",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 44.3,
+        "weekly_avg": 4.9
+      },
+      {
+        "name": "苏俊源",
+        "org4": "技术支持组",
+        "org5": "未知",
+        "total_ot": 42.8,
+        "weekly_avg": 4.8
+      },
+      {
+        "name": "黄金杰",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 42.5,
+        "weekly_avg": 4.7
+      },
+      {
+        "name": "刘小琴",
+        "org4": "项目与运营管理组",
+        "org5": "未知",
+        "total_ot": 40.7,
+        "weekly_avg": 4.5
+      },
+      {
+        "name": "徐懂",
+        "org4": "中转质控交付组",
+        "org5": "客户订单研发组",
+        "total_ot": 40.5,
+        "weekly_avg": 4.5
+      },
+      {
+        "name": "刘平",
+        "org4": "项目与运营管理组",
+        "org5": "未知",
+        "total_ot": 40.1,
+        "weekly_avg": 4.5
+      },
+      {
+        "name": "叶榕桃",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 39.9,
+        "weekly_avg": 4.4
+      },
+      {
+        "name": "余静子",
+        "org4": "项目与运营管理组",
+        "org5": "未知",
+        "total_ot": 39.9,
+        "weekly_avg": 4.4
+      },
+      {
+        "name": "林进",
+        "org4": "中转质控交付组",
+        "org5": "网络质控研发组",
+        "total_ot": 39.8,
+        "weekly_avg": 4.4
+      },
+      {
+        "name": "邓偲",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 39.0,
+        "weekly_avg": 4.3
+      },
+      {
+        "name": "吕鹏辉",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 37.3,
+        "weekly_avg": 4.1
+      },
+      {
+        "name": "林慧丹",
+        "org4": "中转质控交付组",
+        "org5": "网络质控研发组",
+        "total_ot": 37.2,
+        "weekly_avg": 4.1
+      },
+      {
+        "name": "刘勇民",
+        "org4": "终端客服交付组",
+        "org5": "终端运营研发组",
+        "total_ot": 37.1,
+        "weekly_avg": 4.1
+      },
+      {
+        "name": "朱灿",
+        "org4": "终端客服交付组",
+        "org5": "终端运营研发组",
+        "total_ot": 36.2,
+        "weekly_avg": 4.0
+      },
+      {
+        "name": "何少军",
+        "org4": "中转质控交付组",
+        "org5": "揽收运输研发组",
+        "total_ot": 34.0,
+        "weekly_avg": 3.8
+      },
+      {
+        "name": "陈胜超",
+        "org4": "中转质控交付组",
+        "org5": "揽收运输研发组",
+        "total_ot": 33.9,
+        "weekly_avg": 3.8
+      },
+      {
+        "name": "黎炎松",
+        "org4": "终端客服交付组",
+        "org5": "终端运营研发组",
+        "total_ot": 33.7,
+        "weekly_avg": 3.7
+      },
+      {
+        "name": "苏湘瑞",
+        "org4": "业务解决方案组",
+        "org5": "未知",
+        "total_ot": 32.8,
+        "weekly_avg": 3.6
+      },
+      {
+        "name": "方超",
+        "org4": "业务解决方案组",
+        "org5": "未知",
+        "total_ot": 32.6,
+        "weekly_avg": 3.6
+      },
+      {
+        "name": "王思杰",
+        "org4": "数据分析组",
+        "org5": "未知",
+        "total_ot": 30.5,
+        "weekly_avg": 3.4
+      },
+      {
+        "name": "王浩",
+        "org4": "终端客服交付组",
+        "org5": "终端运营研发组",
+        "total_ot": 30.0,
+        "weekly_avg": 3.3
+      },
+      {
+        "name": "郑婷婷",
+        "org4": "项目与运营管理组",
+        "org5": "未知",
+        "total_ot": 27.2,
+        "weekly_avg": 3.0
+      },
+      {
+        "name": "郑继强",
+        "org4": "系统架构组",
+        "org5": "未知",
+        "total_ot": 25.8,
+        "weekly_avg": 2.9
+      },
+      {
+        "name": "陈雄跃",
+        "org4": "业务解决方案组",
+        "org5": "未知",
+        "total_ot": 25.5,
+        "weekly_avg": 2.8
+      },
+      {
+        "name": "曾广亮",
+        "org4": "中转质控交付组",
+        "org5": "网络质控研发组",
+        "total_ot": 25.1,
+        "weekly_avg": 2.8
+      },
+      {
+        "name": "张灼奎",
+        "org4": "项目与运营管理组",
+        "org5": "未知",
+        "total_ot": 24.4,
+        "weekly_avg": 2.7
+      },
+      {
+        "name": "朱宝深",
+        "org4": "技术支持组",
+        "org5": "未知",
+        "total_ot": 20.9,
+        "weekly_avg": 2.3
+      },
+      {
+        "name": "王宗浪",
+        "org4": "技术支持组",
+        "org5": "未知",
+        "total_ot": 19.8,
+        "weekly_avg": 2.2
+      },
+      {
+        "name": "李海涛",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 18.9,
+        "weekly_avg": 2.1
+      },
+      {
+        "name": "刘欢",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 18.8,
+        "weekly_avg": 2.1
+      },
+      {
+        "name": "彭煜",
+        "org4": "终端客服交付组",
+        "org5": "终端运营研发组",
+        "total_ot": 18.3,
+        "weekly_avg": 2.0
+      },
+      {
+        "name": "邓智",
+        "org4": "系统架构组",
+        "org5": "未知",
+        "total_ot": 18.2,
+        "weekly_avg": 2.0
+      },
+      {
+        "name": "谢明辉",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 17.9,
+        "weekly_avg": 2.0
+      },
+      {
+        "name": "王智弘",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 17.8,
+        "weekly_avg": 2.0
+      },
+      {
+        "name": "雷滨林",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 13.9,
+        "weekly_avg": 1.5
+      },
+      {
+        "name": "文诗逸",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 13.8,
+        "weekly_avg": 1.5
+      },
+      {
+        "name": "梁慧亮",
+        "org4": "业务解决方案组",
+        "org5": "未知",
+        "total_ot": 12.1,
+        "weekly_avg": 1.3
+      },
+      {
+        "name": "凌宏权",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 11.8,
+        "weekly_avg": 1.3
+      },
+      {
+        "name": "王通",
+        "org4": "技术支持组",
+        "org5": "未知",
+        "total_ot": 10.5,
+        "weekly_avg": 1.2
+      },
+      {
+        "name": "苑航坤",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 10.5,
+        "weekly_avg": 1.2
+      },
+      {
+        "name": "贡天常",
+        "org4": "中转质控交付组",
+        "org5": "揽收运输研发组",
+        "total_ot": 9.1,
+        "weekly_avg": 1.0
+      },
+      {
+        "name": "罗贡",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 9.0,
+        "weekly_avg": 1.0
+      },
+      {
+        "name": "宋波",
+        "org4": "业务流程管理组",
+        "org5": "未知",
+        "total_ot": 8.1,
+        "weekly_avg": 0.9
+      },
+      {
+        "name": "叶勇",
+        "org4": "终端客服交付组",
+        "org5": "站点管理研发组",
+        "total_ot": 7.5,
+        "weekly_avg": 0.8
+      },
+      {
+        "name": "尹辉辉",
+        "org4": "终端客服交付组",
+        "org5": "派送作业研发组",
+        "total_ot": 7.3,
+        "weekly_avg": 0.8
+      },
+      {
+        "name": "官增文",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 6.8,
+        "weekly_avg": 0.8
+      },
+      {
+        "name": "邹远锋",
+        "org4": "中转质控交付组",
+        "org5": "网络质控研发组",
+        "total_ot": 6.4,
+        "weekly_avg": 0.7
+      },
+      {
+        "name": "林金成",
+        "org4": "中转质控交付组",
+        "org5": "揽收运输研发组",
+        "total_ot": 6.0,
+        "weekly_avg": 0.7
+      },
+      {
+        "name": "余华涛",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 5.2,
+        "weekly_avg": 0.6
+      },
+      {
+        "name": "谢露露",
+        "org4": "中转质控交付组",
+        "org5": "揽收运输研发组",
+        "total_ot": 3.5,
+        "weekly_avg": 0.4
+      },
+      {
+        "name": "张皓",
+        "org4": "中转质控交付组",
+        "org5": "库内操作研发组",
+        "total_ot": 1.8,
+        "weekly_avg": 0.2
+      },
+      {
+        "name": "陈建森",
+        "org4": "业务流程管理组",
+        "org5": "未知",
+        "total_ot": 1.1,
+        "weekly_avg": 0.1
+      },
+      {
+        "name": "蒋雪琴",
+        "org4": "终端客服交付组",
+        "org5": "客服工单研发组",
+        "total_ot": 0.5,
+        "weekly_avg": 0.1
+      }
+    ],
+    "org5_weekly_avg": [
+      {
+        "org5": "库内操作研发组",
+        "total_ot": 1129.7,
+        "emp_count": 15,
+        "avg_ot_per_emp": 75.3,
+        "weekly_avg_total": 125.5,
+        "weekly_avg_per_emp": 8.4
+      },
+      {
+        "org5": "客户订单研发组",
+        "total_ot": 635.7,
+        "emp_count": 9,
+        "avg_ot_per_emp": 70.6,
+        "weekly_avg_total": 70.6,
+        "weekly_avg_per_emp": 7.8
+      },
+      {
+        "org5": "站点管理研发组",
+        "total_ot": 663.9,
+        "emp_count": 12,
+        "avg_ot_per_emp": 55.3,
+        "weekly_avg_total": 73.8,
+        "weekly_avg_per_emp": 6.1
+      },
+      {
+        "org5": "派送作业研发组",
+        "total_ot": 752.1,
+        "emp_count": 14,
+        "avg_ot_per_emp": 53.7,
+        "weekly_avg_total": 83.6,
+        "weekly_avg_per_emp": 6.0
+      },
+      {
+        "org5": "网络质控研发组",
+        "total_ot": 531.5,
+        "emp_count": 10,
+        "avg_ot_per_emp": 53.1,
+        "weekly_avg_total": 59.1,
+        "weekly_avg_per_emp": 5.9
+      },
+      {
+        "org5": "终端运营研发组",
+        "total_ot": 497.3,
+        "emp_count": 10,
+        "avg_ot_per_emp": 49.7,
+        "weekly_avg_total": 55.3,
+        "weekly_avg_per_emp": 5.5
+      },
+      {
+        "org5": "揽收运输研发组",
+        "total_ot": 368.2,
+        "emp_count": 8,
+        "avg_ot_per_emp": 46.0,
+        "weekly_avg_total": 40.9,
+        "weekly_avg_per_emp": 5.1
+      },
+      {
+        "org5": "未知",
+        "total_ot": 1518.0,
+        "emp_count": 34,
+        "avg_ot_per_emp": 44.6,
+        "weekly_avg_total": 168.7,
+        "weekly_avg_per_emp": 5.0
+      },
+      {
+        "org5": "客服工单研发组",
+        "total_ot": 443.9,
+        "emp_count": 12,
+        "avg_ot_per_emp": 37.0,
+        "weekly_avg_total": 49.3,
+        "weekly_avg_per_emp": 4.1
+      }
+    ],
+    "total_weeks": 9
   }
 };
 // ===== KPI Cards =====
@@ -1999,6 +2955,63 @@ function renderOvertimeDeep() {
   });
   html += '</table>';
   document.getElementById('otTop15Table').innerHTML = html;
+
+  // Weekly avg OT by individual (Top20 horizontal bar)
+  const iwa = oa.individual_weekly_avg;
+  if (iwa && iwa.length) {
+    const top20 = iwa.slice(0, 20);
+    new Chart(document.getElementById('chartOtWeeklyPerson'), {
+      type: 'bar',
+      data: {
+        labels: top20.map(x => x.name),
+        datasets: [{
+          label: '每周平均加班(h)',
+          data: top20.map(x => x.weekly_avg),
+          backgroundColor: top20.map(x => x.weekly_avg > 12 ? '#E74C3CCC' : x.weekly_avg > 8 ? '#F39C12CC' : '#4A6CF7CC'),
+          borderRadius: 4,
+          barThickness: 18,
+        }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true,
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: ctx => `${ctx.raw}h/周（总计${top20[ctx.dataIndex].total_ot}h）` } }
+        },
+        scales: {
+          x: { beginAtZero: true, grid: { color: '#f0f1f3' }, title: { display: true, text: '小时/周' } },
+          y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        }
+      }
+    });
+  }
+
+  // Weekly avg OT by org5 (horizontal bar)
+  const o5 = oa.org5_weekly_avg;
+  if (o5 && o5.length) {
+    new Chart(document.getElementById('chartOtWeeklyOrg5'), {
+      type: 'bar',
+      data: {
+        labels: o5.map(x => x.org5),
+        datasets: [{
+          label: '每周人均加班(h)',
+          data: o5.map(x => x.weekly_avg_per_emp),
+          backgroundColor: o5.map(x => x.weekly_avg_per_emp > 7 ? '#E74C3CCC' : x.weekly_avg_per_emp > 5 ? '#F39C12CC' : '#4A6CF7CC'),
+          borderRadius: 4,
+          barThickness: 24,
+        }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true,
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: ctx => `${ctx.raw}h/周/人（${o5[ctx.dataIndex].emp_count}人，总计${o5[ctx.dataIndex].total_ot}h）` } }
+        },
+        scales: {
+          x: { beginAtZero: true, grid: { color: '#f0f1f3' }, title: { display: true, text: '小时/周/人' } },
+          y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        }
+      }
+    });
+  }
 }
 
 // ===== 4. Risk Patterns =====
