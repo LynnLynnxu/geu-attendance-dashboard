@@ -212,11 +212,11 @@ canvas { max-height: 340px; }
   <div class="grid2">
     <div class="card">
       <h3>个人每周平均加班时长排名 <span style="font-size:11px;color:#999;font-weight:400">（Top20）</span></h3>
-      <div class="chart-wrap"><canvas id="chartOtWeeklyPerson"></canvas></div>
+      <div class="chart-wrap" style="height:560px"><canvas id="chartOtWeeklyPerson"></canvas></div>
     </div>
     <div class="card">
       <h3>五级部门每周人均加班时长排名</h3>
-      <div class="chart-wrap"><canvas id="chartOtWeeklyOrg5"></canvas></div>
+      <div class="chart-wrap" style="height:480px"><canvas id="chartOtWeeklyOrg5"></canvas></div>
     </div>
   </div>
 </div>
@@ -3029,7 +3029,7 @@ function renderOvertimeDeep() {
         }]
       },
       options: {
-        indexAxis: 'y', responsive: true,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false },
           tooltip: { callbacks: { label: ctx => `${ctx.raw}h/周（总计${top20[ctx.dataIndex].total_ot}h）` } }
         },
@@ -3057,7 +3057,7 @@ function renderOvertimeDeep() {
         }]
       },
       options: {
-        indexAxis: 'y', responsive: true,
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false },
           tooltip: { callbacks: { label: ctx => `${ctx.raw}h/周/人（${o5[ctx.dataIndex].emp_count}人，总计${o5[ctx.dataIndex].total_ot}h）` } }
         },
