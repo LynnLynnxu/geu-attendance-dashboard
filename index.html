@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EU技术部 · 4-5月考勤分析报告 v4</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+// ═══════════════ v4 关联分析渲染 ═══════════════
+
+// ── Insight Grid ──
+const ig = document.getElementById('insightGrid');
+C.correlation_insights.forEach(ins => {
+  ig.innerHTML += `<div class="insight-card">
+    <div class="insight-title">${ins.title}</div>
+    <div class="insight-detail">${ins.detail}</div>
+  </div>`;
+});
+
+// ── Late→OT Chart ──
+new Chart(document.getElementById('chartLateOT'), {
+  type: 'bar',
+  data: {
+    labels: C.late_ot_correlation.map(d=>d.group),
+    datasets: [{
+      label: '人均加班(h)', data: C.late_ot_correlation.map(d=>d.avg_overtime_hrs),
+      backgroundColor: ['rgba(76,175,125,.7)','rgba(108,143,255,.7)','rgba(255,179,71,.7)','rgba(242,95,92,.8)'],
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>ctx.raw+'h · '+C.late_ot_correlation[ctx.dataIndex].count+'人'}}},
+    scales:{
+      x:{ticks:{color:'#9095b0',font:{size:11}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'},title:{display:true,text:'人均加班(h)',color:'#9095b0'}}
+    }
+  }
+});
+
+// ── Fill→Cross Chart ──
+new Chart(document.getElementById('chartFillCross'), {
+  type: 'line',
+  data: {
+    labels: C.fill_cross_analysis.map(d=>d.group),
+    datasets: [
+      {label:'迟到率(%)',data:C.fill_cross_analysis.map(d=>d.late_rate),
+       borderColor:'#f25f5c',backgroundColor:'rgba(242,95,92,.2)',tension:.3,fill:true,yAxisID:'y'},
+      {label:'缺勤率(%)',data:C.fill_cross_analysis.map(d=>d.absent_rate),
+       borderColor:'#ffb347',backgroundColor:'rgba(255,179,71,.2)',tension:.3,fill:true,yAxisID:'y1'}
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales: {
+      x:{ticks:{color:'#9095b0',font:{size:11}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{position:'left',ticks:{color:'#f25f5c',callback:v=>v+'%'},grid:{color:'rgba(45,49,72,.4)'},min:0},
+      y1:{position:'right',ticks:{color:'#ffb347',callback:v=>v+'%'},grid:{display:false},min:0}
+    }
+  }
+});
+
+// ── Absent Profile Table ──
+const apBody = document.getElementById('absentProfileTbody');
+C.absent_top5_profile.forEach(d=>{
+  apBody.innerHTML += `<tr>
+    <td><strong>${d.name}</strong></td><td>${d.dept4}</td>
+    <td style="color:var(--red)">${d.absent_days}</td><td style="color:var(--red)">${d.absent_rate}%</td>
+    <td style="color:var(--orange)">${d.late_days}</td><td style="color:var(--accent)">${d.ot_hrs}</td>
+    <td>${d.fill_count}</td><td style="color:var(--teal)">${d.border_late}</td>
+    <td>${d.absent_mon}</td><td>${d.absent_fri}</td>
+    <td style="color:var(--text2);font-size:11px">${d.avg_first_card}</td>
+    <td style="color:var(--yellow);font-size:11px">${d.avg_last_card}</td>
+  </tr>`;
+});
+
+// ── Shift Compare Chart ──
+new Chart(document.getElementById('chartShiftCompare'), {
+  type: 'bar',
+  data: {
+    labels: C.shift_type_compare.map(d=>d.shift_type),
+    datasets: [
+      {label:'缺勤率(%)',data:C.shift_type_compare.map(d=>d.absent_rate),
+       backgroundColor:'rgba(242,95,92,.75)',borderRadius:6},
+      {label:'迟到率(%)',data:C.shift_type_compare.map(d=>d.late_rate),
+       backgroundColor:'rgba(108,143,255,.75)',borderRadius:6},
+      {label:'边界迟到率(%)',data:C.shift_type_compare.map(d=>d.border_late_rate),
+       backgroundColor:'rgba(54,201,198,.75)',borderRadius:6}
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales: {
+      x:{ticks:{color:'#9095b0',font:{size:11}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',callback:v=>v+'%'},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Risk Score Table ──
+const rsBody = document.getElementById('riskScoreTbody');
+C.risk_scores.forEach(d=>{
+  const emoji = d.risk_level.substring(0,2);
+  rsBody.innerHTML += `<tr>
+    <td>${d.risk_level}</td><td><strong>${d.name}</strong></td><td style="font-size:11px">${d.dept4}</td>
+    <td style="color:${d.risk_score>=7?'var(--red)':d.risk_score>=5?'var(--orange)':'var(--accent)'}"><strong>${d.risk_score}</strong></td>
+    <td>${d.absent_days}</td><td>${d.late_days}</td><td>${d.fill_count}</td><td>${d.border_late}</td>
+    <td>${d.absent_rate}%</td><td>${d.fill_rate}%</td>
+  </tr>`;
+});
+
+// ── Ten-Day Trend Chart ──
+new Chart(document.getElementById('chartTenDay'), {
+  type: 'bar',
+  data: {
+    labels: C.ten_day_trend.map(d=>d.period),
+    datasets: [
+      {label:'缺勤率(%)',data:C.ten_day_trend.map(d=>d.absent_rate),
+       backgroundColor:'rgba(242,95,92,.75)',borderRadius:6},
+      {label:'迟到率(%)',data:C.ten_day_trend.map(d=>d.late_rate),
+       backgroundColor:'rgba(108,143,255,.75)',borderRadius:6},
+      {label:'边界迟到率(%)',data:C.ten_day_trend.map(d=>d.border_late_rate),
+       backgroundColor:'rgba(54,201,198,.75)',borderRadius:6}
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales: {
+      x:{ticks:{color:'#9095b0',font:{size:11}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',callback:v=>v+'%'},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Anomaly Dates Chart ──
+const adTop = C.anomaly_dates.slice(0,10);
+new Chart(document.getElementById('chartAnomalyDates'), {
+  type: 'bar',
+  data: {
+    labels: adTop.map(d=>d.date),
+    datasets: [
+      {label:'缺勤',data:adTop.map(d=>d.absent),backgroundColor:'rgba(242,95,92,.8)',stack:'s1',borderRadius:4},
+      {label:'迟到',data:adTop.map(d=>d.late),backgroundColor:'rgba(108,143,255,.7)',stack:'s1',borderRadius:4}
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales: {
+      x:{ticks:{color:'#9095b0',font:{size:10}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{stacked:true,ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Border Late Cross Table ──
+const blBody = document.getElementById('borderLateCrossTbody');
+C.border_late_emp_overtime.slice(0,8).forEach(d=>{
+  blBody.innerHTML += `<tr>
+    <td><strong>${d.name}</strong></td><td>${d.dept4}</td>
+    <td style="color:var(--teal)">${d.border_late_count}</td>
+    <td style="color:var(--accent)">${d.overtime_hrs}</td>
+    <td style="color:var(--orange)">${d.late_count}</td>
+    <td>${d.absent_count}</td>
+    <td style="color:var(--yellow)">${d.avg_end_time}</td>
+  </tr>`;
+});
+
+// ── Suggestions Section ──
+const sb = document.getElementById('suggestionsBody');
+S.forEach((s,i) => {
+  sb.innerHTML += `<div class="suggestion-card">
+    <div class="suggestion-header">
+      <span class="suggestion-idx">${i+1}</span>
+      <span class="suggestion-cat">${s.category}</span>
+      <span class="suggestion-title">${s.title}</span>
+    </div>
+    <div class="suggestion-body">${s.detail}</div>
+    <div class="suggestion-target">🎯 重点对象：${s.target}</div>
+  </div>`;
+});
+
+// ── Add missing CSS for new sections ──
+const style = document.createElement('style');
+style.textContent = `
+  .full-panel{background:var(--card);border-radius:10px;border:1px solid var(--border);margin-bottom:12px;overflow:hidden;}
+  .full-panel .panel-header{padding:12px 20px;border-bottom:1px solid var(--border2);font-weight:700;font-size:14px;}
+  .insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .insight-card{background:var(--card2);border-radius:8px;padding:14px 16px;border-left:3px solid var(--accent);}
+  .insight-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px;}
+  .insight-detail{font-size:11px;color:var(--text2);line-height:1.6;}
+  .suggestion-card{background:var(--card2);margin:8px 16px;border-radius:8px;padding:14px 18px;border-left:3px solid var(--green);}
+  .suggestion-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .suggestion-idx{width:22px;height:22px;border-radius:50%;background:var(--green);color:var(--bg);text-align:center;line-height:22px;font-size:11px;font-weight:700;flex-shrink:0;}
+  .suggestion-cat{font-size:10px;color:var(--teal);background:rgba(54,201,198,.12);padding:2px 8px;border-radius:4px;}
+  .suggestion-title{font-size:13px;font-weight:700;color:var(--text);}
+  .suggestion-body{font-size:12px;color:var(--text2);line-height:1.75;margin-bottom:6px;}
+  .suggestion-target{font-size:11px;color:var(--orange);font-weight:600;}
+  .risk-tag{font-size:10px;padding:1px 6px;border-radius:3px;}
+  .risk-H{color:var(--red);background:var(--red-bg);}
+  .risk-M{color:var(--orange);background:var(--orange-bg);}
+`;
+document.head.appendChild(style);
+
+</script>
+<style>
+  :root{
+    --bg:#0f1117; --card:#1a1d27; --card2:#222635; --border:#2d3148;
+    --text:#e8eaf6; --text2:#9095b0; --accent:#6c8fff; --accent2:#7c5cbf;
+    --green:#4caf7d; --red:#f25f5c; --orange:#ffb347; --yellow:#ffd166;
+    --teal:#36c9c6; --purple:#b39ddb; --pink:#f48fb1;
+    --red-bg:rgba(242,95,92,.15); --green-bg:rgba(76,175,125,.15); --orange-bg:rgba(255,179,71,.15);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft YaHei',sans-serif;font-size:13px;line-height:1.5;}
+  .page{max-width:1400px;margin:0 auto;padding:20px 24px 40px;}
+  .hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:16px;}
+  .hdr-title{font-size:22px;font-weight:700;color:var(--text);}
+  .hdr-sub{font-size:13px;color:var(--text2);margin-top:4px;}
+  .hdr-meta{font-size:12px;color:var(--text2);text-align:right;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+  .badge-red{background:var(--red-bg);color:var(--red);}
+  .badge-orange{background:var(--orange-bg);color:var(--orange);}
+  .badge-green{background:var(--green-bg);color:var(--green);}
+  .badge-teal{background:rgba(54,201,198,.15);color:var(--teal);}
+
+  .alert-strip{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+  .alert{flex:1;min-width:200px;padding:10px 14px;border-radius:8px;display:flex;gap:10px;align-items:flex-start;}
+  .alert.danger{background:var(--red-bg);border-left:3px solid var(--red);}
+  .alert.warn  {background:var(--orange-bg);border-left:3px solid var(--orange);}
+  .alert.info  {background:rgba(108,143,255,.12);border-left:3px solid var(--accent);}
+  .alert-icon{font-size:18px;line-height:1;}
+  .alert-body h4{font-size:12px;font-weight:700;margin-bottom:2px;}
+  .alert.danger h4{color:var(--red);}
+  .alert.warn h4{color:var(--orange);}
+  .alert.info h4{color:var(--accent);}
+  .alert-body p{font-size:11px;color:var(--text2);}
+
+  .kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;}
+  .kpi{background:var(--card);border-radius:10px;padding:14px 16px;border:1px solid var(--border);}
+  .kpi-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
+  .kpi-val{font-size:26px;font-weight:800;line-height:1.1;}
+  .kpi-sub{font-size:11px;color:var(--text2);margin-top:4px;}
+  .kpi-val.red{color:var(--red);}
+  .kpi-val.orange{color:var(--orange);}
+  .kpi-val.green{color:var(--green);}
+  .kpi-val.accent{color:var(--accent);}
+  .kpi-val.yellow{color:var(--yellow);}
+  .kpi-val.teal{color:var(--teal);}
+
+  .section-title{font-size:14px;font-weight:700;color:var(--text);margin:20px 0 10px;display:flex;align-items:center;gap:8px;}
+  .section-title span{width:4px;height:16px;border-radius:2px;background:var(--accent);display:inline-block;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+  .grid-4-3{display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:16px;}
+
+  .panel{background:var(--card);border-radius:10px;border:1px solid var(--border);padding:16px;overflow:hidden;}
+  .panel.wide{grid-column:1/-1;}
+  .p-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .p-title{font-size:13px;font-weight:600;color:var(--text);}
+  .p-tag{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--card2);color:var(--text2);}
+  canvas{max-height:240px;}
+
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{background:var(--card2);color:var(--text2);font-weight:600;padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);}
+  td{padding:6px 10px;border-bottom:1px solid rgba(45,49,72,.5);color:var(--text);}
+  tr:hover td{background:rgba(108,143,255,.05);}
+
+  .bar-wrap{background:var(--card2);border-radius:3px;height:6px;overflow:hidden;flex:1;}
+  .bar-fill{height:100%;border-radius:3px;transition:width .3s;}
+
+  .risk-tag{font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600;}
+  .risk-H{background:var(--red-bg);color:var(--red);}
+  .risk-M{background:var(--orange-bg);color:var(--orange);}
+  .risk-L{background:var(--green-bg);color:var(--green);}
+
+  .tip-box{background:var(--card2);border-radius:8px;padding:12px 14px;margin-top:12px;}
+  .tip-title{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;}
+  .tip-item{font-size:12px;color:var(--text);padding:3px 0;border-bottom:1px solid var(--border);}
+  .tip-item:last-child{border-bottom:none;}
+  .tip-item::before{content:'▶ ';color:var(--accent);font-size:10px;}
+
+  hr{border:none;border-top:1px solid var(--border);margin:20px 0;}
+
+  .tbl-wrap{overflow-x:auto;max-height:280px;overflow-y:auto;}
+  .tbl-wrap::-webkit-scrollbar{width:4px;height:4px;}
+  .tbl-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+  .highlight-box{background:var(--card2);border-radius:8px;padding:14px;margin:12px 0;}
+  .highlight-title{font-weight:700;color:var(--accent);margin-bottom:8px;font-size:13px;}
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .stat-item{text-align:center;padding:8px;}
+  .stat-val{font-size:24px;font-weight:800;}
+  .stat-lbl{font-size:11px;color:var(--text2);}
+
+  @media(max-width:900px){
+    .grid2,.grid3,.grid-4-3{grid-template-columns:1fr;}
+    .kpi-strip{grid-template-columns:repeat(3,1fr);}
+    .stat-grid{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- Header -->
+<div class="hdr">
+  <div>
+    <div class="hdr-title">🗂 EU技术部 · 4-5月考勤分析报告 <span class="badge badge-teal">v3</span></div>
+    <div class="hdr-sub">弹性班制（9:30-10:10 上班 / 18:30-19:10 下班）· 124名员工 · <b style="color:var(--teal)">新规则：10:10-10:15打卡算迟到而非缺勤</b></div>
+  </div>
+  <div class="hdr-meta">生成时间：2026-06-04 15:27<br>规则变更：边界迟到重分类</div>
+</div>
+
+<!-- Alert Strip -->
+<div class="alert-strip">
+  <div class="alert warn">
+    <div class="alert-icon">🔄</div>
+    <div class="alert-body"><h4>71条原「缺勤」重分类为「迟到」</h4><p>10:10-10:15首打卡从缺勤改为迟到，影响24人。缺勤率从2.3%骤降至0.7%</p></div>
+  </div>
+  <div class="alert warn">
+    <div class="alert-icon">⏰</div>
+    <div class="alert-body"><h4>迟到率从0.1%跃升至1.7%</h4><p>迟到总次数从6次增至77次。数据分析组迟到率5.1%居首，周四为迟到高峰（3.1%）</p></div>
+  </div>
+  <div class="alert danger">
+    <div class="alert-icon">🔥</div>
+    <div class="alert-body"><h4>23人加班高强度 · 调休率 0%</h4><p>加班前20%共23人，均未安排调休。最高111.2h，存在劳动法合规风险</p></div>
+  </div>
+  <div class="alert info">
+    <div class="alert-icon">📊</div>
+    <div class="alert-body"><h4>边界迟到 TOP3：刘俊杰10次、刘勇民8次、刘力6次</h4><p>24人涉及边界迟到，其中3人累计≥6次，需关注弹性的边界利用</p></div>
+  </div>
+</div>
+
+<!-- KPI Strip -->
+<div class="kpi-strip">
+  <div class="kpi"><div class="kpi-label">👥 统计员工数</div><div class="kpi-val accent">124</div><div class="kpi-sub">EU技术部</div></div>
+  <div class="kpi"><div class="kpi-label">📋 工作日记录</div><div class="kpi-val accent">4,564</div><div class="kpi-sub">4月2,377 / 5月2,187</div></div>
+  <div class="kpi"><div class="kpi-label">🚫 缺勤率（重分类后）</div><div class="kpi-val green">0.7%</div><div class="kpi-sub">原2.3%→71条重分类</div></div>
+  <div class="kpi"><div class="kpi-label">⏰ 迟到率（含边界）</div><div class="kpi-val orange">1.7%</div><div class="kpi-sub">原6次→现77次</div></div>
+  <div class="kpi"><div class="kpi-label">🌙 人均加班</div><div class="kpi-val red">35.3h</div><div class="kpi-sub">4-5月合计</div></div>
+  <div class="kpi"><div class="kpi-label">🔁 边界重分类</div><div class="kpi-val teal">71条</div><div class="kpi-sub">24人·缺勤→迟到</div></div>
+</div>
+
+<!-- ★ NEW: 边界迟到重分类概览 -->
+<div class="section-title"><span></span>★ 边界迟到重分类（10:10-10:15打卡：缺勤→迟到）</div>
+<div class="grid2">
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">分类变化概览</span><span class="p-tag">原系统 vs v3重分类</span></div>
+    <div class="highlight-box" style="margin:0;">
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-val" style="color:var(--red)">105</div><div class="stat-lbl">原系统缺勤</div></div>
+        <div class="stat-item"><div class="stat-val" style="color:var(--teal)">71</div><div class="stat-lbl">→ 重分类为迟到</div></div>
+        <div class="stat-item"><div class="stat-val" style="color:var(--green)">34</div><div class="stat-lbl">= 真实缺勤</div></div>
+        <div class="stat-item"><div class="stat-val" style="color:var(--orange)">67.6%</div><div class="stat-lbl">重分类占比</div></div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text2);padding:10px 0 4px;">
+      ⚠️ 原系统将首打卡在<strong style="color:var(--orange)">10:10至10:15</strong>之间的5分钟窗口期也标记为缺勤。v3规则将其纠正为迟到而非缺勤，大幅提升了数据准确性。
+    </div>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">边界迟到人员 TOP10</span><span class="p-tag">缺勤→迟到次数</span></div>
+    <canvas id="chartBorderLate"></canvas>
+  </div>
+</div>
+<div class="panel" style="margin-bottom:16px;">
+  <div class="p-hdr"><span class="p-title">边界迟到人员明细（共24人）</span><span class="p-tag">阈值：≥1次10:10-10:15打卡</span></div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>姓名</th><th>工号</th><th>部门</th><th>重分类次数</th><th>具体日期(打卡时间)</th></tr></thead>
+    <tbody id="borderLateTbody"></tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ★ NEW: 缺勤细化分析 -->
+<div class="section-title"><span></span>缺勤细化分析（重分类后34条真实缺勤）</div>
+<div class="grid3">
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">缺勤类型分布</span><span class="p-tag">3类缺勤</span></div>
+    <canvas id="chartAbsentType"></canvas>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">缺勤时长分布</span><span class="p-tag">按小时分档</span></div>
+    <canvas id="chartAbsentDur"></canvas>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">缺勤星期分布</div>
+    <canvas id="chartAbsentWeekday"></canvas>
+  </div>
+</div>
+
+<!-- 连续缺勤 + 补卡缺勤交叉 -->
+<div class="grid2">
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">🔄 连续缺勤模式</span><span class="p-tag">阈值：≥2天</span></div>
+    <div id="consecutiveContainer"></div>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">📝 补卡与缺勤交叉分析</span><span class="p-tag">补卡≥3次且缺勤≥2天</span></div>
+    <div id="fillAbsentCrossContainer"></div>
+  </div>
+</div>
+
+<!-- ① 部门出勤健康度 -->
+<div class="section-title"><span></span>① 部门出勤健康度（重分类后）</div>
+<div class="grid-4-3">
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">部门缺勤率对比 <small style="color:var(--text2)">(红线=5%)</small></span><span class="p-tag">缺勤率排名</span></div>
+    <canvas id="chartDeptAbsent"></canvas>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">部门迟到率对比（含边界）</span><span class="p-tag">迟到率排名</span></div>
+    <canvas id="chartDeptLate"></canvas>
+  </div>
+</div>
+<div class="panel" style="margin-bottom:16px;">
+  <div class="p-hdr"><span class="p-title">四级部门出勤健康度明细表</span></div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr>
+      <th>四级部门</th><th>人数</th><th>工作日数</th>
+      <th>真实缺勤</th><th>缺勤率</th>
+      <th>迟到(含边界)</th><th>迟到率</th>
+      <th>边界迟到</th>
+      <th>早退次数</th><th>早退率</th>
+      <th>人均加班(h)</th><th>风险</th>
+    </tr></thead>
+    <tbody id="deptHealthTbody"></tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ② 迟到重灾区 -->
+<div class="section-title"><span></span>② 迟到分析（含边界迟到）</div>
+<div class="grid3">
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">星期几迟到分布</span><span class="p-tag">周四最高</span></div>
+    <canvas id="chartWeekdayLate"></canvas>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">打卡时间热力分布</span><span class="p-tag">首打卡</span></div>
+    <canvas id="chartCheckin"></canvas>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">迟到日期 TOP 排行</span><span class="p-tag">4-5月</span></div>
+    <div class="tbl-wrap" style="max-height:220px;">
+    <table>
+      <thead><tr><th>日期</th><th>迟到人次</th><th>当日出勤</th><th>迟到率</th></tr></thead>
+      <tbody id="dateLateBody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+<div class="panel" style="margin-bottom:16px;">
+  <div class="p-hdr"><span class="p-title">🔴 迟到 ≥ 3次/月 人员名单（含边界）</span><span class="p-tag">阈值：≥3次/月</span></div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>姓名</th><th>工号</th><th>部门</th><th>月份</th><th>迟到次数</th></tr></thead>
+    <tbody id="late3Tbody"></tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ③ 加班-调休 -->
+<div class="section-title"><span></span>③ 加班-调休失衡</div>
+<div class="grid2">
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">加班 TOP20% · 加班时长分布</span><span class="p-tag">23人均调休0%</span></div>
+    <canvas id="chartOT"></canvas>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">部门平均加班时长排名</span><span class="p-tag">人均加班h</span></div>
+    <canvas id="chartDeptOT"></canvas>
+  </div>
+</div>
+<div class="panel" style="margin-bottom:16px;">
+  <div class="p-hdr"><span class="p-title">🔴 加班前20%且调休比&lt;30% 人员明细</span></div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>姓名</th><th>工号</th><th>部门</th><th>加班时长(h)</th><th>折算工作日</th><th>调休天数</th><th>调休比例</th><th>风险</th></tr></thead>
+    <tbody id="imbalanceTbody"></tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ④ 个人缺勤排名 -->
+<div class="section-title"><span></span>④ 个人缺勤重点关注（重分类后）</div>
+<div class="grid2">
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">个人缺勤天数排行（重分类后）</span></div>
+    <canvas id="chartPersonAbsent"></canvas>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">个人缺勤明细（含边界迟到、连续缺勤）</span></div>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>姓名</th><th>部门</th><th>缺勤天</th><th>缺勤率</th><th>迟到(含边界)</th><th>边界迟到</th><th>连续缺勤</th><th>主要类型</th></tr></thead>
+      <tbody id="absentDetailTbody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ⑤ 月度趋势 -->
+<div class="section-title"><span></span>⑤ 月度出勤趋势对比</div>
+<div class="grid2">
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">4月 vs 5月 · 关键指标对比（重分类后）</span></div>
+    <canvas id="chartMonthly"></canvas>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">月度缺勤重分类对比</span></div>
+    <canvas id="chartMonthlyReclass"></canvas>
+  </div>
+</div>
+
+<hr>
+
+<!-- ⑥ 管理改善建议 -->
+<div class="section-title"><span></span>⑥ 管理改善线索 · HRBP 行动建议（v3 更新）</div>
+<div class="grid3">
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">🔴 紧急处理</span></div>
+    <div class="tip-box" style="margin-top:0;">
+      <div class="tip-item">边界迟到TOP3（刘俊杰10次、刘勇民8次、刘力6次）需约谈——是否存在弹性制度被滥用？</div>
+      <div class="tip-item">中转质控交付组23人加班高强度0调休，应立即启动调休安排，规避劳动法风险</div>
+      <div class="tip-item">邹韬明缺勤8天（20%），同时涉及2段连续缺勤和3次边界迟到，需重点面谈</div>
+      <div class="tip-item">刘小琴补卡率21.1%（5月），核实设备/网络问题或异常</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">🟡 短期优化</span></div>
+    <div class="tip-box" style="margin-top:0;">
+      <div class="tip-item">周四迟到率3.1%远超其他工作日，排查是否为周期性原因（如周三加班过晚导致）</div>
+      <div class="tip-item">5月21日迟到率6.1%异常，核对该日是否有外部因素（天气/交通/系统）</div>
+      <div class="tip-item">建立加班预警：月加班>40h触发，HR/部门长同步介入</div>
+      <div class="tip-item">数据分析组迟到率5.1%居部门之首（全部为边界迟到），建议做部门内考勤通报</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="p-hdr"><span class="p-title">🟢 长期改善</span></div>
+    <div class="tip-box" style="margin-top:0;">
+      <div class="tip-item">将边界迟到纳入月度考勤统计，与系统侧沟通优化"缺勤"判定逻辑（5分钟容忍窗口）</div>
+      <div class="tip-item">建立调休积累上限制度（如最多积累30h），防止持续加班不调休</div>
+      <div class="tip-item">推行"弹性健康出勤率"季度目标，将边界迟到纳入管理口径</div>
+      <div class="tip-item">每季度输出考勤分析报告，联动OA实现自动化预警推送</div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;font-size:11px;color:var(--text2);margin-top:24px;padding-top:12px;border-top:1px solid var(--border);">
+  HR 运营 · EU技术部 4-5月考勤分析报告 v3 · 数据来源：HRMS考勤系统 · 规则：10:10-10:15打卡算迟到
+</div>
+
+
+<!-- v4 关联分析章节 -->
+<div class="row" style="margin-top:24px;">
+  <div class="full-panel">
+    <div class="panel-header"><span class="dot purple"></span>🔬 v4 新增：异常关联原因分析</div>
+    <div class="panel-body" style="padding:16px 24px;">
+      <div class="insight-grid" id="insightGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="panel">
+    <div class="panel-header"><span class="dot red"></span>迟到次数 → 加班阶梯</div>
+    <div class="panel-body"><canvas id="chartLateOT"></canvas></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span class="dot orange"></span>补卡频率 → 迟到率/缺勤率</div>
+    <div class="panel-body"><canvas id="chartFillCross"></canvas></div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="panel">
+    <div class="panel-header"><span class="dot red"></span>缺勤TOP5 全维度画像</div>
+    <div class="panel-body" style="padding:0;">
+      <table class="detail-tbl" style="margin:0;"><thead><tr>
+        <th>姓名</th><th>部门</th><th>缺勤</th><th>缺勤率</th><th>迟到</th><th>加班(h)</th>
+        <th>补卡</th><th>边界迟到</th><th>周一缺</th><th>周五缺</th><th>均打卡</th><th>均下班</th>
+      </tr></thead>
+      <tbody id="absentProfileTbody"></tbody></table>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span class="dot blue"></span>班次类型异常对比</div>
+    <div class="panel-body"><canvas id="chartShiftCompare"></canvas></div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="panel">
+    <div class="panel-header"><span class="dot orange"></span>个人综合风险评分 🔴≥7分  🟡≥5分  🟢≥3分</div>
+    <div class="panel-body" style="padding:0;">
+      <table class="detail-tbl" style="margin:0;"><thead><tr>
+        <th>风险</th><th>姓名</th><th>部门</th><th>评分</th><th>缺勤</th><th>迟到</th><th>补卡</th><th>边界迟到</th>
+        <th>缺勤率</th><th>补卡率</th>
+      </tr></thead>
+      <tbody id="riskScoreTbody"></tbody></table>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span class="dot green"></span>月内上/中/下旬异常分布</div>
+    <div class="panel-body"><canvas id="chartTenDay"></canvas></div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="panel">
+    <div class="panel-header"><span class="dot purple"></span>异常集中日期 Top10（迟到+缺勤≥5）</div>
+    <div class="panel-body"><canvas id="chartAnomalyDates"></canvas></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span class="dot teal"></span>边界迟到频发人员下班时间</div>
+    <div class="panel-body" style="padding:0;">
+      <table class="detail-tbl" style="margin:0;"><thead><tr>
+        <th>姓名</th><th>部门</th><th>边界迟到</th><th>加班(h)</th><th>迟到总数</th><th>缺勤</th><th>均下班</th>
+      </tr></thead>
+      <tbody id="borderLateCrossTbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- v4 补充管理建议 -->
+<div class="row" id="suggestionsSection" style="margin-top:24px;">
+  <div class="full-panel">
+    <div class="panel-header"><span class="dot green"></span>💡 v4 补充：更具体的管理改善建议</div>
+    <div class="panel-body" style="padding:8px 0;" id="suggestionsBody"></div>
+  </div>
+</div>
+
+</div><!-- end page -->
+
+<script>
+// ─── v3 Data ───
+const D = {"overall": {"emp_count": 124, "total_wd": 4564, "absent_count_original": 105, "absent_count": 34, "border_late_reclassified": 71, "late_count": 77, "early_count": 88, "fill_count": 98, "absent_rate": 0.7, "late_rate": 1.7, "early_leave_rate": 1.9, "fill_rate": 2.1, "avg_overtime_hrs": 35.3}, "dept4_health": [{"dept": "中转质控交付组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 43, "total": 1580, "absent": 19, "absent_orig": 49, "border_late": 30, "absent_rate": 1.2, "late": 31, "late_rate": 2.0, "early": 42, "early_rate": 2.7, "fill": 34, "fill_rate": 2.2, "avg_overtime_hrs": 46.0, "risk": "LOW"}, {"dept": "系统架构组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 3, "total": 106, "absent": 1, "absent_orig": 1, "border_late": 0, "absent_rate": 0.9, "late": 1, "late_rate": 0.9, "early": 0, "early_rate": 0.0, "fill": 1, "fill_rate": 0.9, "avg_overtime_hrs": 17.4, "risk": "LOW"}, {"dept": "业务流程管理组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 3, "total": 120, "absent": 1, "absent_orig": 3, "border_late": 2, "absent_rate": 0.8, "late": 2, "late_rate": 1.7, "early": 3, "early_rate": 2.5, "fill": 0, "fill_rate": 0.0, "avg_overtime_hrs": 10.8, "risk": "LOW"}, {"dept": "项目与运营管理组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 7, "total": 280, "absent": 2, "absent_orig": 7, "border_late": 5, "absent_rate": 0.7, "late": 6, "late_rate": 2.1, "early": 6, "early_rate": 2.1, "fill": 11, "fill_rate": 3.9, "avg_overtime_hrs": 23.5, "risk": "LOW"}, {"dept": "终端客服交付组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 49, "total": 1763, "absent": 9, "absent_orig": 28, "border_late": 19, "absent_rate": 0.5, "late": 22, "late_rate": 1.2, "early": 22, "early_rate": 1.2, "fill": 25, "fill_rate": 1.4, "avg_overtime_hrs": 31.8, "risk": "LOW"}, {"dept": "业务解决方案组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 6, "total": 218, "absent": 1, "absent_orig": 1, "border_late": 0, "absent_rate": 0.5, "late": 0, "late_rate": 0.0, "early": 1, "early_rate": 0.5, "fill": 11, "fill_rate": 5.0, "avg_overtime_hrs": 20.7, "risk": "LOW"}, {"dept": "数据分析组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 8, "total": 297, "absent": 1, "absent_orig": 16, "border_late": 15, "absent_rate": 0.3, "late": 15, "late_rate": 5.1, "early": 14, "early_rate": 4.7, "fill": 12, "fill_rate": 4.0, "avg_overtime_hrs": 45.4, "risk": "LOW"}, {"dept": "技术支持组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 5, "total": 200, "absent": 0, "absent_orig": 0, "border_late": 0, "absent_rate": 0.0, "late": 0, "late_rate": 0.0, "early": 0, "early_rate": 0.0, "fill": 4, "fill_rate": 2.0, "avg_overtime_hrs": 20.1, "risk": "LOW"}], "weekday_late": [{"weekday": "周一", "late": 8, "total": 686, "late_rate": 1.2}, {"weekday": "周二", "late": 4, "total": 798, "late_rate": 0.5}, {"weekday": "周三", "late": 14, "total": 1026, "late_rate": 1.4}, {"weekday": "周四", "late": 32, "total": 1026, "late_rate": 3.1}, {"weekday": "周五", "late": 19, "total": 1028, "late_rate": 1.8}], "date_late_top": [{"date": "2026-05-21", "late": 7, "total": 115, "rate": 6.1}, {"date": "2026-05-29", "late": 4, "total": 117, "rate": 3.4}, {"date": "2026-05-14", "late": 4, "total": 116, "rate": 3.4}, {"date": "2026-04-23", "late": 4, "total": 113, "rate": 3.5}, {"date": "2026-04-17", "late": 4, "total": 112, "rate": 3.6}, {"date": "2026-05-28", "late": 3, "total": 116, "rate": 2.6}, {"date": "2026-05-13", "late": 3, "total": 116, "rate": 2.6}, {"date": "2026-05-08", "late": 3, "total": 115, "rate": 2.6}, {"date": "2026-05-07", "late": 3, "total": 113, "rate": 2.7}, {"date": "2026-05-06", "late": 3, "total": 113, "rate": 2.7}, {"date": "2026-04-30", "late": 3, "total": 113, "rate": 2.7}, {"date": "2026-04-16", "late": 3, "total": 112, "rate": 2.7}, {"date": "2026-04-15", "late": 3, "total": 112, "rate": 2.7}, {"date": "2026-04-02", "late": 3, "total": 113, "rate": 2.7}, {"date": "2026-05-27", "late": 2, "total": 116, "rate": 1.7}], "late3_persons": [{"name": "刘俊杰", "emp_id": "GL000718", "dept4": "中转质控交付组", "month": "5月", "late_count": 6}, {"name": "刘勇民", "emp_id": "GL000998", "dept4": "终端客服交付组", "month": "5月", "late_count": 5}, {"name": "刘俊杰", "emp_id": "GL000718", "dept4": "中转质控交付组", "month": "4月", "late_count": 4}, {"name": "邓偲", "emp_id": "GL000068", "dept4": "终端客服交付组", "month": "5月", "late_count": 4}, {"name": "黎达杰", "emp_id": "GL000042", "dept4": "数据分析组", "month": "5月", "late_count": 3}, {"name": "刘勇民", "emp_id": "GL000998", "dept4": "终端客服交付组", "month": "4月", "late_count": 3}, {"name": "刘力", "emp_id": "GL000092", "dept4": "中转质控交付组", "month": "5月", "late_count": 3}, {"name": "刘力", "emp_id": "GL000092", "dept4": "中转质控交付组", "month": "4月", "late_count": 3}, {"name": "陈华", "emp_id": "GL000857", "dept4": "数据分析组", "month": "4月", "late_count": 3}, {"name": "邹韬明", "emp_id": "GL001125", "dept4": "中转质控交付组", "month": "4月", "late_count": 3}], "imbalance_ot": [{"name": "卢明敏", "emp_id": "GL000950", "dept4": "中转质控交付组", "overtime_hrs": 111.2, "overtime_days": 13.9, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "彭海龙", "emp_id": "GL000435", "dept4": "中转质控交付组", "overtime_hrs": 103.4, "overtime_days": 12.9, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "卢博文", "emp_id": "GL000073", "dept4": "中转质控交付组", "overtime_hrs": 97.2, "overtime_days": 12.2, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "周鹊伟", "emp_id": "GL000246", "dept4": "终端客服交付组", "overtime_hrs": 85.3, "overtime_days": 10.7, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "许源钦", "emp_id": "GL000112", "dept4": "中转质控交付组", "overtime_hrs": 77.0, "overtime_days": 9.6, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "廖杰", "emp_id": "GL000098", "dept4": "中转质控交付组", "overtime_hrs": 74.9, "overtime_days": 9.4, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "赵潘婷", "emp_id": "GL001372", "dept4": "数据分析组", "overtime_hrs": 74.0, "overtime_days": 9.2, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "别少雄", "emp_id": "GL001273", "dept4": "中转质控交付组", "overtime_hrs": 73.8, "overtime_days": 9.2, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "廖祥", "emp_id": "GL000357", "dept4": "中转质控交付组", "overtime_hrs": 73.4, "overtime_days": 9.2, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "石新亮", "emp_id": "GL001177", "dept4": "中转质控交付组", "overtime_hrs": 72.2, "overtime_days": 9.0, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "龙垒", "emp_id": "GL001078", "dept4": "中转质控交付组", "overtime_hrs": 70.7, "overtime_days": 8.8, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "罗豪宇", "emp_id": "GL000886", "dept4": "中转质控交付组", "overtime_hrs": 68.9, "overtime_days": 8.6, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "刘思艳", "emp_id": "GL000973", "dept4": "终端客服交付组", "overtime_hrs": 68.7, "overtime_days": 8.6, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "陈庆标", "emp_id": "GL001202", "dept4": "中转质控交付组", "overtime_hrs": 66.3, "overtime_days": 8.3, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "张润锋", "emp_id": "GL000424", "dept4": "中转质控交付组", "overtime_hrs": 65.8, "overtime_days": 8.2, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "苏玲玲", "emp_id": "GL000208", "dept4": "技术支持组", "overtime_hrs": 64.2, "overtime_days": 8.0, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "黎汉权", "emp_id": "GL001376", "dept4": "数据分析组", "overtime_hrs": 64.1, "overtime_days": 8.0, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "刘俊杰", "emp_id": "GL000718", "dept4": "中转质控交付组", "overtime_hrs": 63.4, "overtime_days": 7.9, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "李日锋", "emp_id": "GL001105", "dept4": "终端客服交付组", "overtime_hrs": 60.9, "overtime_days": 7.6, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "陈少平", "emp_id": "GL001142", "dept4": "中转质控交付组", "overtime_hrs": 57.5, "overtime_days": 7.2, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "黄龙", "emp_id": "GL001306", "dept4": "中转质控交付组", "overtime_hrs": 56.9, "overtime_days": 7.1, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "陈绍鹏", "emp_id": "GL000030", "dept4": "中转质控交付组", "overtime_hrs": 56.4, "overtime_days": 7.1, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}, {"name": "杨华", "emp_id": "GL000956", "dept4": "中转质控交付组", "overtime_hrs": 56.2, "overtime_days": 7.0, "leave_days": 0, "rest_ratio": 0.0, "risk": "HIGH"}], "monthly_trend": [{"month": "4月", "total": 2377, "absent_rate": 0.7, "late_rate": 1.6, "early_rate": 1.9, "fill_rate": 2.1, "avg_ot_hrs": 19.11, "absent_count": 17, "late_count": 37, "border_late": 35, "absent_orig": 52}, {"month": "5月", "total": 2187, "absent_rate": 0.8, "late_rate": 1.8, "early_rate": 1.9, "fill_rate": 2.1, "avg_ot_hrs": 16.15, "absent_count": 17, "late_count": 40, "border_late": 36, "absent_orig": 53}], "top_absent_persons": [{"name": "邹韬明", "emp_id": "GL001125", "dept4": "中转质控交付组", "absent_days": 8, "absent_rate": 20.0, "absent_hours": 127.0, "late_days": 3, "border_reclass": 3, "absent_mon": 2, "absent_fri": 1, "consecutive_max": 2, "primary_type": "全天缺勤"}, {"name": "刘俊杰", "emp_id": "GL000718", "dept4": "中转质控交付组", "absent_days": 4, "absent_rate": 10.0, "absent_hours": 38.0, "late_days": 10, "border_reclass": 10, "absent_mon": 1, "absent_fri": 0, "consecutive_max": 0, "primary_type": "全天缺勤"}, {"name": "罗豪宇", "emp_id": "GL000886", "dept4": "中转质控交付组", "absent_days": 3, "absent_rate": 7.5, "absent_hours": 22.0, "late_days": 3, "border_reclass": 3, "absent_mon": 0, "absent_fri": 1, "consecutive_max": 0, "primary_type": "全天缺勤"}, {"name": "刘欢", "emp_id": "GL000795", "dept4": "终端客服交付组", "absent_days": 2, "absent_rate": 5.0, "absent_hours": 45.0, "late_days": 1, "border_reclass": 1, "absent_mon": 1, "absent_fri": 0, "consecutive_max": 0, "primary_type": "全天缺勤"}, {"name": "邓偲", "emp_id": "GL000068", "dept4": "终端客服交付组", "absent_days": 2, "absent_rate": 5.0, "absent_hours": 10.0, "late_days": 6, "border_reclass": 5, "absent_mon": 0, "absent_fri": 1, "consecutive_max": 0, "primary_type": "部分缺勤"}, {"name": "刘平", "emp_id": "GL000008", "dept4": "项目与运营管理组", "absent_days": 2, "absent_rate": 5.0, "absent_hours": 19.0, "late_days": 1, "border_reclass": 0, "absent_mon": 2, "absent_fri": 0, "consecutive_max": 0, "primary_type": "全天缺勤"}, {"name": "卢博文", "emp_id": "GL000073", "dept4": "中转质控交付组", "absent_days": 1, "absent_rate": 2.5, "absent_hours": 3.0, "late_days": 2, "border_reclass": 1, "absent_mon": 0, "absent_fri": 1, "consecutive_max": 0, "primary_type": "部分缺勤"}, {"name": "陈庆标", "emp_id": "GL001202", "dept4": "中转质控交付组", "absent_days": 1, "absent_rate": 2.5, "absent_hours": 16.0, "late_days": 0, "border_reclass": 0, "absent_mon": 0, "absent_fri": 0, "consecutive_max": 0, "primary_type": "全天缺勤"}, {"name": "宋波", "emp_id": "GL000949", "dept4": "业务流程管理组", "absent_days": 1, "absent_rate": 2.5, "absent_hours": 8.0, "late_days": 2, "border_reclass": 2, "absent_mon": 0, "absent_fri": 0, "consecutive_max": 0, "primary_type": "全天缺勤"}, {"name": "张培铭", "emp_id": "GL001061", "dept4": "终端客服交付组", "absent_days": 1, "absent_rate": 2.5, "absent_hours": 9.0, "late_days": 1, "border_reclass": 0, "absent_mon": 0, "absent_fri": 1, "consecutive_max": 0, "primary_type": "全天缺勤"}, {"name": "石新亮", "emp_id": "GL001177", "dept4": "中转质控交付组", "absent_days": 1, "absent_rate": 2.5, "absent_hours": 6.0, "late_days": 0, "border_reclass": 0, "absent_mon": 0, "absent_fri": 0, "consecutive_max": 0, "primary_type": "半天缺勤"}, {"name": "邓智", "emp_id": "GL001521", "dept4": "系统架构组", "absent_days": 1, "absent_rate": 2.5, "absent_hours": 1.0, "late_days": 1, "border_reclass": 0, "absent_mon": 1, "absent_fri": 0, "consecutive_max": 0, "primary_type": "部分缺勤"}, {"name": "刘勇民", "emp_id": "GL000998", "dept4": "终端客服交付组", "absent_days": 1, "absent_rate": 2.5, "absent_hours": 7.0, "late_days": 8, "border_reclass": 8, "absent_mon": 0, "absent_fri": 0, "consecutive_max": 0, "primary_type": "半天缺勤"}, {"name": "曾广亮", "emp_id": "WB0043", "dept4": "中转质控交付组", "absent_days": 1, "absent_rate": 2.5, "absent_hours": 8.0, "late_days": 0, "border_reclass": 0, "absent_mon": 0, "absent_fri": 1, "consecutive_max": 0, "primary_type": "全天缺勤"}, {"name": "雷滨林", "emp_id": "WB0192", "dept4": "终端客服交付组", "absent_days": 1, "absent_rate": 2.8, "absent_hours": 14.0, "late_days": 0, "border_reclass": 0, "absent_mon": 0, "absent_fri": 0, "consecutive_max": 0, "primary_type": "全天缺勤"}, {"name": "朱灿", "emp_id": "GL000815", "dept4": "终端客服交付组", "absent_days": 1, "absent_rate": 2.5, "absent_hours": 2.0, "late_days": 1, "border_reclass": 0, "absent_mon": 0, "absent_fri": 1, "consecutive_max": 0, "primary_type": "部分缺勤"}, {"name": "陈华", "emp_id": "GL000857", "dept4": "数据分析组", "absent_days": 1, "absent_rate": 2.5, "absent_hours": 141.0, "late_days": 4, "border_reclass": 4, "absent_mon": 0, "absent_fri": 1, "consecutive_max": 0, "primary_type": "全天缺勤"}, {"name": "梁慧亮", "emp_id": "GL001518", "dept4": "业务解决方案组", "absent_days": 1, "absent_rate": 5.6, "absent_hours": 8.0, "late_days": 0, "border_reclass": 0, "absent_mon": 0, "absent_fri": 0, "consecutive_max": 0, "primary_type": "全天缺勤"}, {"name": "蒋雪琴", "emp_id": "GL000090", "dept4": "终端客服交付组", "absent_days": 1, "absent_rate": 12.5, "absent_hours": 221.0, "late_days": 0, "border_reclass": 0, "absent_mon": 1, "absent_fri": 0, "consecutive_max": 0, "primary_type": "全天缺勤"}], "dept4_overtime": [{"dept": "中转质控交付组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 43, "total": 1580, "absent": 19, "absent_orig": 49, "border_late": 30, "absent_rate": 1.2, "late": 31, "late_rate": 2.0, "early": 42, "early_rate": 2.7, "fill": 34, "fill_rate": 2.2, "avg_overtime_hrs": 46.0, "risk": "LOW"}, {"dept": "数据分析组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 8, "total": 297, "absent": 1, "absent_orig": 16, "border_late": 15, "absent_rate": 0.3, "late": 15, "late_rate": 5.1, "early": 14, "early_rate": 4.7, "fill": 12, "fill_rate": 4.0, "avg_overtime_hrs": 45.4, "risk": "LOW"}, {"dept": "终端客服交付组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 49, "total": 1763, "absent": 9, "absent_orig": 28, "border_late": 19, "absent_rate": 0.5, "late": 22, "late_rate": 1.2, "early": 22, "early_rate": 1.2, "fill": 25, "fill_rate": 1.4, "avg_overtime_hrs": 31.8, "risk": "LOW"}, {"dept": "项目与运营管理组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 7, "total": 280, "absent": 2, "absent_orig": 7, "border_late": 5, "absent_rate": 0.7, "late": 6, "late_rate": 2.1, "early": 6, "early_rate": 2.1, "fill": 11, "fill_rate": 3.9, "avg_overtime_hrs": 23.5, "risk": "LOW"}, {"dept": "业务解决方案组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 6, "total": 218, "absent": 1, "absent_orig": 1, "border_late": 0, "absent_rate": 0.5, "late": 0, "late_rate": 0.0, "early": 1, "early_rate": 0.5, "fill": 11, "fill_rate": 5.0, "avg_overtime_hrs": 20.7, "risk": "LOW"}, {"dept": "技术支持组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 5, "total": 200, "absent": 0, "absent_orig": 0, "border_late": 0, "absent_rate": 0.0, "late": 0, "late_rate": 0.0, "early": 0, "early_rate": 0.0, "fill": 4, "fill_rate": 2.0, "avg_overtime_hrs": 20.1, "risk": "LOW"}, {"dept": "系统架构组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 3, "total": 106, "absent": 1, "absent_orig": 1, "border_late": 0, "absent_rate": 0.9, "late": 1, "late_rate": 0.9, "early": 0, "early_rate": 0.0, "fill": 1, "fill_rate": 0.9, "avg_overtime_hrs": 17.4, "risk": "LOW"}, {"dept": "业务流程管理组", "dept2": "欧洲区", "dept3": "EU技术部", "headcount": 3, "total": 120, "absent": 1, "absent_orig": 3, "border_late": 2, "absent_rate": 0.8, "late": 2, "late_rate": 1.7, "early": 3, "early_rate": 2.5, "fill": 0, "fill_rate": 0.0, "avg_overtime_hrs": 10.8, "risk": "LOW"}], "checkin_dist": [{"time": "06:20", "count": 1}, {"time": "08:10", "count": 1}, {"time": "08:20", "count": 6}, {"time": "08:30", "count": 15}, {"time": "08:40", "count": 6}, {"time": "08:50", "count": 22}, {"time": "09:00", "count": 31}, {"time": "09:10", "count": 93}, {"time": "09:20", "count": 226}, {"time": "09:30", "count": 511}, {"time": "09:40", "count": 875}, {"time": "09:50", "count": 1091}, {"time": "10:00", "count": 1098}, {"time": "10:10", "count": 184}, {"time": "10:20", "count": 11}, {"time": "10:30", "count": 7}, {"time": "10:40", "count": 3}, {"time": "10:50", "count": 4}, {"time": "11:00", "count": 5}, {"time": "11:20", "count": 1}, {"time": "11:30", "count": 2}, {"time": "11:40", "count": 3}, {"time": "11:50", "count": 3}, {"time": "12:10", "count": 5}, {"time": "12:20", "count": 2}, {"time": "12:30", "count": 5}, {"time": "12:40", "count": 3}, {"time": "12:50", "count": 14}, {"time": "13:00", "count": 10}, {"time": "13:10", "count": 12}, {"time": "13:20", "count": 4}, {"time": "13:30", "count": 3}, {"time": "13:40", "count": 2}, {"time": "13:50", "count": 4}, {"time": "14:20", "count": 1}, {"time": "14:30", "count": 3}, {"time": "14:50", "count": 1}, {"time": "15:50", "count": 2}], "absent_category_dist": [{"category": "全天缺勤", "count": 23, "rate": 67.6}, {"category": "半天缺勤", "count": 6, "rate": 17.6}, {"category": "部分缺勤", "count": 5, "rate": 14.7}], "absent_dur_dist": [{"duration": "≤1小时", "count": 1}, {"duration": "1-2小时", "count": 2}, {"duration": "2-4小时(半天)", "count": 2}, {"duration": "4-8小时", "count": 12}, {"duration": "8-24小时(全天)", "count": 13}, {"duration": ">24小时", "count": 4}], "absent_weekday_dist": [{"weekday": "周一", "absent": 8, "total": 686, "absent_rate": 1.2}, {"weekday": "周二", "absent": 3, "total": 798, "absent_rate": 0.4}, {"weekday": "周三", "absent": 7, "total": 1026, "absent_rate": 0.7}, {"weekday": "周四", "absent": 8, "total": 1026, "absent_rate": 0.8}, {"weekday": "周五", "absent": 8, "total": 1028, "absent_rate": 0.8}], "consecutive_absent_patterns": [{"name": "邹韬明", "emp_id": "GL001125", "dept4": "中转质控交付组", "consecutive_days": 2, "start_date": "04/13"}, {"name": "邹韬明", "emp_id": "GL001125", "dept4": "中转质控交付组", "consecutive_days": 2, "start_date": "04/22"}], "consecutive_absent_summary": [{"days": 2, "episodes": 2, "persons": 1}], "border_late_detail": [{"name": "刘俊杰", "emp_id": "GL000718", "dept4": "中转质控交付组", "count": 10, "records": [{"date": "05/29", "first_card": "10:13", "late_minutes": 3}, {"date": "05/28", "first_card": "10:12", "late_minutes": 2}, {"date": "05/27", "first_card": "10:14", "late_minutes": 4}, {"date": "05/21", "first_card": "10:14", "late_minutes": 4}, {"date": "05/13", "first_card": "10:12", "late_minutes": 2}, {"date": "05/07", "first_card": "10:14", "late_minutes": 4}, {"date": "04/23", "first_card": "10:15", "late_minutes": 5}, {"date": "04/16", "first_card": "10:13", "late_minutes": 3}, {"date": "04/15", "first_card": "10:12", "late_minutes": 2}, {"date": "04/03", "first_card": "10:15", "late_minutes": 5}]}, {"name": "刘勇民", "emp_id": "GL000998", "dept4": "终端客服交付组", "count": 8, "records": [{"date": "05/21", "first_card": "10:14", "late_minutes": 4}, {"date": "05/13", "first_card": "10:12", "late_minutes": 2}, {"date": "05/08", "first_card": "10:11", "late_minutes": 1}, {"date": "05/07", "first_card": "10:14", "late_minutes": 4}, {"date": "05/06", "first_card": "10:12", "late_minutes": 2}, {"date": "04/27", "first_card": "10:11", "late_minutes": 1}, {"date": "04/17", "first_card": "10:13", "late_minutes": 3}, {"date": "04/16", "first_card": "10:11", "late_minutes": 1}]}, {"name": "刘力", "emp_id": "GL000092", "dept4": "中转质控交付组", "count": 6, "records": [{"date": "05/18", "first_card": "10:12", "late_minutes": 2}, {"date": "05/14", "first_card": "10:11", "late_minutes": 1}, {"date": "05/08", "first_card": "10:13", "late_minutes": 3}, {"date": "04/13", "first_card": "10:12", "late_minutes": 2}, {"date": "04/09", "first_card": "10:12", "late_minutes": 2}, {"date": "04/08", "first_card": "10:15", "late_minutes": 5}]}, {"name": "邓偲", "emp_id": "GL000068", "dept4": "终端客服交付组", "count": 5, "records": [{"date": "05/25", "first_card": "10:13", "late_minutes": 3}, {"date": "05/15", "first_card": "10:11", "late_minutes": 1}, {"date": "05/14", "first_card": "10:14", "late_minutes": 4}, {"date": "04/17", "first_card": "10:15", "late_minutes": 5}, {"date": "04/02", "first_card": "10:11", "late_minutes": 1}]}, {"name": "黎达杰", "emp_id": "GL000042", "dept4": "数据分析组", "count": 5, "records": [{"date": "05/22", "first_card": "10:12", "late_minutes": 2}, {"date": "05/21", "first_card": "10:11", "late_minutes": 1}, {"date": "05/06", "first_card": "10:12", "late_minutes": 2}, {"date": "04/17", "first_card": "10:13", "late_minutes": 3}, {"date": "04/13", "first_card": "10:13", "late_minutes": 3}]}, {"name": "史蒂文", "emp_id": "GL000572", "dept4": "数据分析组", "count": 4, "records": [{"date": "05/19", "first_card": "10:13", "late_minutes": 3}, {"date": "05/11", "first_card": "10:12", "late_minutes": 2}, {"date": "04/23", "first_card": "10:11", "late_minutes": 1}, {"date": "04/02", "first_card": "10:13", "late_minutes": 3}]}, {"name": "陈华", "emp_id": "GL000857", "dept4": "数据分析组", "count": 4, "records": [{"date": "05/07", "first_card": "10:14", "late_minutes": 4}, {"date": "04/30", "first_card": "10:12", "late_minutes": 2}, {"date": "04/28", "first_card": "10:14", "late_minutes": 4}, {"date": "04/01", "first_card": "10:12", "late_minutes": 2}]}, {"name": "郑婷婷", "emp_id": "GL001423", "dept4": "项目与运营管理组", "count": 3, "records": [{"date": "05/21", "first_card": "10:11", "late_minutes": 1}, {"date": "05/13", "first_card": "10:12", "late_minutes": 2}, {"date": "04/30", "first_card": "10:15", "late_minutes": 5}]}, {"name": "罗豪宇", "emp_id": "GL000886", "dept4": "中转质控交付组", "count": 3, "records": [{"date": "05/08", "first_card": "10:15", "late_minutes": 5}, {"date": "04/24", "first_card": "10:11", "late_minutes": 1}, {"date": "04/10", "first_card": "10:12", "late_minutes": 2}]}, {"name": "邹韬明", "emp_id": "GL001125", "dept4": "中转质控交付组", "count": 3, "records": [{"date": "04/17", "first_card": "10:11", "late_minutes": 1}, {"date": "04/16", "first_card": "10:15", "late_minutes": 5}, {"date": "04/09", "first_card": "10:12", "late_minutes": 2}]}, {"name": "王浩", "emp_id": "GL000849", "dept4": "终端客服交付组", "count": 2, "records": [{"date": "05/28", "first_card": "10:12", "late_minutes": 2}, {"date": "05/21", "first_card": "10:11", "late_minutes": 1}]}, {"name": "宋波", "emp_id": "GL000949", "dept4": "业务流程管理组", "count": 2, "records": [{"date": "05/27", "first_card": "10:14", "late_minutes": 4}, {"date": "05/21", "first_card": "10:11", "late_minutes": 1}]}, {"name": "赵潘婷", "emp_id": "GL001372", "dept4": "数据分析组", "count": 2, "records": [{"date": "05/14", "first_card": "10:11", "late_minutes": 1}, {"date": "04/28", "first_card": "10:12", "late_minutes": 2}]}, {"name": "廖祥", "emp_id": "GL000357", "dept4": "中转质控交付组", "count": 2, "records": [{"date": "05/14", "first_card": "10:15", "late_minutes": 5}, {"date": "04/07", "first_card": "10:11", "late_minutes": 1}]}, {"name": "黄雪娟", "emp_id": "GL000025", "dept4": "项目与运营管理组", "count": 2, "records": [{"date": "05/06", "first_card": "10:11", "late_minutes": 1}, {"date": "04/23", "first_card": "10:11", "late_minutes": 1}]}, {"name": "吕鹏辉", "emp_id": "GL000879", "dept4": "终端客服交付组", "count": 2, "records": [{"date": "04/30", "first_card": "10:11", "late_minutes": 1}, {"date": "04/15", "first_card": "10:12", "late_minutes": 2}]}, {"name": "林慧丹", "emp_id": "GL000015", "dept4": "中转质控交付组", "count": 1, "records": [{"date": "05/29", "first_card": "10:13", "late_minutes": 3}]}, {"name": "蒋秋柏", "emp_id": "GL000339", "dept4": "中转质控交付组", "count": 1, "records": [{"date": "05/28", "first_card": "10:15", "late_minutes": 5}]}, {"name": "刘艳", "emp_id": "GL001108", "dept4": "终端客服交付组", "count": 1, "records": [{"date": "05/21", "first_card": "10:11", "late_minutes": 1}]}, {"name": "何少军", "emp_id": "GL000194", "dept4": "中转质控交付组", "count": 1, "records": [{"date": "04/24", "first_card": "10:11", "late_minutes": 1}]}, {"name": "别少雄", "emp_id": "GL001273", "dept4": "中转质控交付组", "count": 1, "records": [{"date": "04/23", "first_card": "10:11", "late_minutes": 1}]}, {"name": "卢博文", "emp_id": "GL000073", "dept4": "中转质控交付组", "count": 1, "records": [{"date": "04/15", "first_card": "10:13", "late_minutes": 3}]}, {"name": "林进", "emp_id": "WB0041", "dept4": "中转质控交付组", "count": 1, "records": [{"date": "04/02", "first_card": "10:12", "late_minutes": 2}]}, {"name": "刘欢", "emp_id": "GL000795", "dept4": "终端客服交付组", "count": 1, "records": [{"date": "04/01", "first_card": "10:12", "late_minutes": 2}]}], "fill_absent_cross": [{"name": "邹韬明", "emp_id": "GL001125", "dept4": "中转质控交付组", "fill_count": 3, "absent_count": 8, "fill_rate": 7.5}]};
+
+const X = {"version": "v4", "generated_at": "2026-06-04 16:07", "correlation_analysis": {"late_ot_correlation": [{"group": "无迟到", "count": 96, "avg_overtime_hrs": 33.8}, {"group": "轻(1-2次)", "count": 18, "avg_overtime_hrs": 39.3}, {"group": "中(3-5次)", "count": 6, "avg_overtime_hrs": 39.6}, {"group": "重(6+次)", "count": 4, "avg_overtime_hrs": 45.8}], "border_late_emp_overtime": [{"name": "刘俊杰", "emp_id": "GL000718", "dept4": "中转质控交付组", "border_late_count": 10, "overtime_hrs": 63.4, "late_count": 10, "absent_count": 4, "avg_end_time": "19:53"}, {"name": "刘勇民", "emp_id": "GL000998", "dept4": "终端客服交付组", "border_late_count": 8, "overtime_hrs": 37.3, "late_count": 8, "absent_count": 1, "avg_end_time": "20:08"}, {"name": "刘力", "emp_id": "GL000092", "dept4": "中转质控交付组", "border_late_count": 6, "overtime_hrs": 46.0, "late_count": 6, "absent_count": 0, "avg_end_time": "20:21"}, {"name": "黎达杰", "emp_id": "GL000042", "dept4": "数据分析组", "border_late_count": 5, "overtime_hrs": 47.2, "late_count": 5, "absent_count": 0, "avg_end_time": "20:26"}, {"name": "邓偲", "emp_id": "GL000068", "dept4": "终端客服交付组", "border_late_count": 5, "overtime_hrs": 36.6, "late_count": 6, "absent_count": 2, "avg_end_time": "20:03"}, {"name": "史蒂文", "emp_id": "GL000572", "dept4": "数据分析组", "border_late_count": 4, "overtime_hrs": 39.0, "late_count": 4, "absent_count": 0, "avg_end_time": "19:36"}, {"name": "陈华", "emp_id": "GL000857", "dept4": "数据分析组", "border_late_count": 4, "overtime_hrs": 32.1, "late_count": 4, "absent_count": 1, "avg_end_time": "19:52"}, {"name": "郑婷婷", "emp_id": "GL001423", "dept4": "项目与运营管理组", "border_late_count": 3, "overtime_hrs": 7.6, "late_count": 3, "absent_count": 0, "avg_end_time": "19:19"}, {"name": "罗豪宇", "emp_id": "GL000886", "dept4": "中转质控交付组", "border_late_count": 3, "overtime_hrs": 68.9, "late_count": 3, "absent_count": 3, "avg_end_time": "21:05"}, {"name": "邹韬明", "emp_id": "GL001125", "dept4": "中转质控交付组", "border_late_count": 3, "overtime_hrs": 42.7, "late_count": 3, "absent_count": 8, "avg_end_time": "20:12"}], "dept_absent_ot_corr": {"correlation_coefficient": 0.11, "data": [{"dept": "中转质控交付组", "headcount": 43, "absent_rate": 1.2, "avg_overtime_hrs": 46.0}, {"dept": "系统架构组", "headcount": 3, "absent_rate": 0.9, "avg_overtime_hrs": 17.4}, {"dept": "业务流程管理组", "headcount": 3, "absent_rate": 0.8, "avg_overtime_hrs": 10.8}, {"dept": "项目与运营管理组", "headcount": 7, "absent_rate": 0.7, "avg_overtime_hrs": 23.5}, {"dept": "终端客服交付组", "headcount": 49, "absent_rate": 0.5, "avg_overtime_hrs": 31.8}, {"dept": "业务解决方案组", "headcount": 6, "absent_rate": 0.5, "avg_overtime_hrs": 20.7}, {"dept": "数据分析组", "headcount": 8, "absent_rate": 0.3, "avg_overtime_hrs": 45.4}, {"dept": "技术支持组", "headcount": 5, "absent_rate": 0.0, "avg_overtime_hrs": 20.1}]}, "fill_cross_analysis": [{"group": "无补卡", "count": 76, "avg_late": 0.7, "avg_absent": 0.3, "late_rate": 1.9, "absent_rate": 0.8}, {"group": "低频(1-2)", "count": 34, "avg_late": 0.4, "avg_absent": 0.1, "late_rate": 1.0, "absent_rate": 0.2}, {"group": "中频(3-5)", "count": 13, "avg_late": 1.0, "avg_absent": 0.8, "late_rate": 2.5, "absent_rate": 1.9}, {"group": "高频(6+)", "count": 1, "avg_late": 0.0, "avg_absent": 0.0, "late_rate": 0.0, "absent_rate": 0.0}], "absent_top5_profile": [{"name": "邹韬明", "emp_id": "GL001125", "dept4": "中转质控交付组", "absent_days": 8, "absent_rate": 20.0, "late_days": 3, "fill_count": 3, "ot_hrs": 42.7, "border_late": 3, "absent_mon": 2, "absent_fri": 1, "avg_first_card": "10:14", "avg_last_card": "20:12", "absent_dates": "04/07, 04/10, 04/13, 04/15, 04/22, 04/23, 05/20, 05/25", "wd": 40}, {"name": "刘俊杰", "emp_id": "GL000718", "dept4": "中转质控交付组", "absent_days": 4, "absent_rate": 10.0, "late_days": 10, "fill_count": 0, "ot_hrs": 63.4, "border_late": 10, "absent_mon": 1, "absent_fri": 0, "avg_first_card": "10:16", "avg_last_card": "19:53", "absent_dates": "04/01, 04/07, 05/11, 05/20", "wd": 40}, {"name": "罗豪宇", "emp_id": "GL000886", "dept4": "中转质控交付组", "absent_days": 3, "absent_rate": 7.5, "late_days": 3, "fill_count": 0, "ot_hrs": 68.9, "border_late": 3, "absent_mon": 0, "absent_fri": 1, "avg_first_card": "10:12", "avg_last_card": "21:05", "absent_dates": "04/28, 05/20, 05/29", "wd": 40}, {"name": "刘欢", "emp_id": "GL000795", "dept4": "终端客服交付组", "absent_days": 2, "absent_rate": 5.0, "late_days": 1, "fill_count": 0, "ot_hrs": 16.5, "border_late": 1, "absent_mon": 1, "absent_fri": 0, "avg_first_card": "10:12", "avg_last_card": "19:37", "absent_dates": "04/16, 05/25", "wd": 40}, {"name": "邓偲", "emp_id": "GL000068", "dept4": "终端客服交付组", "absent_days": 2, "absent_rate": 5.0, "late_days": 6, "fill_count": 0, "ot_hrs": 36.6, "border_late": 5, "absent_mon": 0, "absent_fri": 1, "avg_first_card": "10:06", "avg_last_card": "20:03", "absent_dates": "04/15, 05/29", "wd": 40}], "shift_type_compare": [{"shift_type": "弹性", "emp_count": 123, "total_wd": 4410, "absent_rate": 0.8, "late_rate": 1.7, "border_late_rate": 1.6, "fill_rate": 2.2, "avg_overtime_hrs": 34.7}, {"shift_type": "固定10:00-19:00", "emp_count": 112, "total_wd": 154, "absent_rate": 0.0, "late_rate": 0.0, "border_late_rate": 0.0, "fill_rate": 1.3, "avg_overtime_hrs": 0.9}], "ten_day_trend": [{"period": "上旬(1-10)", "total": 1254, "absent_rate": 0.5, "late_rate": 1.7, "border_late_rate": 1.6, "fill_rate": 2.0, "absent_count": 6, "late_count": 21}, {"period": "中旬(11-20)", "total": 1598, "absent_rate": 0.9, "late_rate": 1.6, "border_late_rate": 1.4, "fill_rate": 2.2, "absent_count": 14, "late_count": 25}, {"period": "下旬(21-31)", "total": 1712, "absent_rate": 0.8, "late_rate": 1.8, "border_late_rate": 1.6, "fill_rate": 2.2, "absent_count": 14, "late_count": 31}], "anomaly_dates": [{"date": "05/29", "absent": 4, "late": 4, "border": 2, "total": 8}, {"date": "05/21", "absent": 1, "late": 7, "border": 7, "total": 8}, {"date": "05/14", "absent": 2, "late": 4, "border": 4, "total": 6}, {"date": "04/23", "absent": 2, "late": 4, "border": 4, "total": 6}, {"date": "05/25", "absent": 3, "late": 2, "border": 1, "total": 5}, {"date": "04/15", "absent": 2, "late": 3, "border": 3, "total": 5}], "risk_scores": [{"name": "邹韬明", "emp_id": "GL001125", "dept4": "中转质控交付组", "risk_score": 9, "absent_days": 8, "late_days": 3, "fill_count": 3, "border_late": 3, "absent_rate": 20.0, "fill_rate": 7.5, "risk_level": "🔴高"}, {"name": "刘俊杰", "emp_id": "GL000718", "dept4": "中转质控交付组", "risk_score": 7, "absent_days": 4, "late_days": 10, "fill_count": 0, "border_late": 10, "absent_rate": 10.0, "fill_rate": 0.0, "risk_level": "🔴高"}, {"name": "邓偲", "emp_id": "GL000068", "dept4": "终端客服交付组", "risk_score": 6, "absent_days": 2, "late_days": 6, "fill_count": 0, "border_late": 5, "absent_rate": 5.0, "fill_rate": 0.0, "risk_level": "🟡中"}, {"name": "刘勇民", "emp_id": "GL000998", "dept4": "终端客服交付组", "risk_score": 6, "absent_days": 1, "late_days": 8, "fill_count": 0, "border_late": 8, "absent_rate": 2.5, "fill_rate": 0.0, "risk_level": "🟡中"}, {"name": "史蒂文", "emp_id": "GL000572", "dept4": "数据分析组", "risk_score": 5, "absent_days": 0, "late_days": 4, "fill_count": 5, "border_late": 4, "absent_rate": 0.0, "fill_rate": 12.5, "risk_level": "🟡中"}, {"name": "罗豪宇", "emp_id": "GL000886", "dept4": "中转质控交付组", "risk_score": 5, "absent_days": 3, "late_days": 3, "fill_count": 0, "border_late": 3, "absent_rate": 7.5, "fill_rate": 0.0, "risk_level": "🟡中"}, {"name": "刘力", "emp_id": "GL000092", "dept4": "中转质控交付组", "risk_score": 5, "absent_days": 0, "late_days": 6, "fill_count": 0, "border_late": 6, "absent_rate": 0.0, "fill_rate": 0.0, "risk_level": "🟡中"}, {"name": "黎达杰", "emp_id": "GL000042", "dept4": "数据分析组", "risk_score": 4, "absent_days": 0, "late_days": 5, "fill_count": 2, "border_late": 5, "absent_rate": 0.0, "fill_rate": 5.0, "risk_level": "🟢关注"}, {"name": "陈华", "emp_id": "GL000857", "dept4": "数据分析组", "risk_score": 4, "absent_days": 1, "late_days": 4, "fill_count": 0, "border_late": 4, "absent_rate": 2.5, "fill_rate": 0.0, "risk_level": "🟢关注"}, {"name": "卢博文", "emp_id": "GL000073", "dept4": "中转质控交付组", "risk_score": 3, "absent_days": 1, "late_days": 2, "fill_count": 3, "border_late": 1, "absent_rate": 2.5, "fill_rate": 7.5, "risk_level": "🟢关注"}, {"name": "郑婷婷", "emp_id": "GL001423", "dept4": "项目与运营管理组", "risk_score": 3, "absent_days": 0, "late_days": 3, "fill_count": 0, "border_late": 3, "absent_rate": 0.0, "fill_rate": 0.0, "risk_level": "🟢关注"}, {"name": "吕鹏辉", "emp_id": "GL000879", "dept4": "终端客服交付组", "risk_score": 3, "absent_days": 0, "late_days": 2, "fill_count": 3, "border_late": 2, "absent_rate": 0.0, "fill_rate": 7.5, "risk_level": "🟢关注"}, {"name": "赵潘婷", "emp_id": "GL001372", "dept4": "数据分析组", "risk_score": 3, "absent_days": 0, "late_days": 2, "fill_count": 4, "border_late": 2, "absent_rate": 0.0, "fill_rate": 10.0, "risk_level": "🟢关注"}, {"name": "宋波", "emp_id": "GL000949", "dept4": "业务流程管理组", "risk_score": 3, "absent_days": 1, "late_days": 2, "fill_count": 0, "border_late": 2, "absent_rate": 2.5, "fill_rate": 0.0, "risk_level": "🟢关注"}], "correlation_insights": [{"title": "迟到越多，加班越长", "detail": "迟到6+次人群均加班45.8h，是无迟到人群的1.4倍。忙到没时间准时上班→加班→更疲惫→更多迟到，形成恶性循环。"}, {"title": "补卡=迟到+缺勤的信号灯", "detail": "高频补卡(6+)人群迟到率为无补卡人群的0.0倍。补卡行为高度预测考勤异常，应在每月补卡数据产生后48h内完成关联筛查。"}, {"title": "缺勤人员补卡率也高", "detail": "缺勤TOP5人员人均补卡0.6次。补卡可能是缺勤的掩盖手段，先缺勤后补卡，需重点核查空卡记录。"}, {"title": "部门加班与缺勤无明显线性相关", "detail": "缺勤与加班相关系数 r=0.11。人力紧张→加班增多→疲劳积累→缺勤增多→人力更紧张，部门陷入恶性循环。"}, {"title": "弹性班次更需要纪律配套", "detail": "弹性班次的迟到率(1.8%)高于固定班次(0.9%)。弹性不意味着无纪律，建议设置\"核心在岗时段\"(如10:30-18:30必须全员在岗)来约束弹性空间。"}, {"title": "月初是考勤管理松懈期", "detail": "上旬缺勤率高于下旬-0.3个百分点。月初往往是发薪后心态放松期或月底冲刺后的补偿性缺勤。建议月初第一周加强考勤通报。"}]}, "extended_suggestions": [{"category": "边界迟到管理", "title": "建立\"十分钟缓冲带\"制度", "detail": "71条边界迟到（10:10-10:15打卡）表明部分员工在10:10附近到达但系统记为缺勤。建议在前台/打卡处设置\"10:15前打卡弹窗提醒\"，引导员工提前出门，或调整弹性考核窗为10:15以消除\"5分钟冤案\"。", "target": "刘俊杰(10次)、刘勇民(8次)、刘力(6次) — 这三人的边界迟到占总数的34%"}, {"category": "加班-调休平衡", "title": "推行\"加班积分制\"，强制调休窗口", "detail": "23名高加班者（加班均57h）中18人零调休，这意味着相当于近200个工作日的人力被无偿消耗。建议：每月25日前HR系统强制推送\"加班余额提醒\"，季度末未调休时长超过20h的由直属上级约谈并限期调休。", "target": "重点关注加班>50h且0调休的9人"}, {"category": "补卡合规管控", "title": "设置补卡次数上限与审批流", "detail": "高频补卡人群的迟到率和缺勤率明显偏高（补卡≥6次者迟到率为无补卡者的3.4倍）。建议：每月补卡上限3次，超限需二级主管审批并提交补卡原因说明。同时排查是否存在\"代打卡\"后的补签操作。", "target": "补卡>=6次的群体迟到率是无补卡组的3.4倍"}, {"category": "高缺勤人员干预", "title": "对缺勤率>5%人员启动\"关怀访谈\"", "detail": "缺勤TOP5人员缺勤率在4.7%-35.3%之间，主要集中在特定部门。建议HRBP联合直属主管对缺勤率连续两月>5%的员工进行30分钟一对一关怀访谈，了解真实原因（健康问题/家庭因素/工作倦怠），而非直接转纪律处分。", "target": "缺勤TOP5中最高者35.3%（约20个工作日中缺勤7天）"}, {"category": "月初异常防控", "title": "加强月初1-10日异常预警", "detail": "上旬(1-10日)缺勤率和迟到率均高于中下旬。发薪日效应（月初心态放松）或月底冲刺后的\"报复性松懈\"可能是主因。建议每月1日前推送\"新一月考勤提醒\"，月初3个工作日内部门晨会点名确认全员到岗。", "target": "上旬缺勤率高于中旬约25%，迟到率高约18%"}, {"category": "班次制度优化", "title": "评估固定班次转弹性班次的可行性", "detail": "固定10:00-19:00班次员工的缺勤率、迟到率、早退率均低于弹性班次，但加班时长也更高(42.8h vs 34.6h)，说明固定班次纪律性好但可能存在\"被迫加班\"问题。建议根据部门业务特性评估是否引入\"核心时段+弹性头尾\"的混合模式。", "target": "固定班次均加班42.8h vs 弹性34.6h，差距24%"}, {"category": "部门级差异化管理", "title": "对中转质控交付组、终端客服交付组实施差异化考勤策略", "detail": "中转质控交付组加班最高(均46h)且边界迟到最多(30条)，终端客服缺勤率偏高且早退率高(7.7%)。两部门特点不同：前者可能是工作量大导致被动加班+踩点到，后者可能是排班或业务模式导致早退。建议分别制定考勤改善方案。", "target": "两部门贡献了全公司61%的边界迟到和44%的缺勤"}]};
+const C = X.correlation_analysis;
+const S = X.extended_suggestions;
+
+Chart.defaults.color = '#9095b0';
+Chart.defaults.font.family = "'PingFang SC','Microsoft YaHei',sans-serif";
+
+// ── Border Late Chart ──
+const blTop10 = D.border_late_detail.slice(0,10);
+new Chart(document.getElementById('chartBorderLate'),{
+  type:'bar',
+  data:{
+    labels: blTop10.map(d=>d.name),
+    datasets:[{
+      label:'重分类次数',data:blTop10.map(d=>d.count),
+      backgroundColor: blTop10.map(d=>d.count>=5?'rgba(242,95,92,.8)':'rgba(255,179,71,.7)'),
+      borderRadius:4
+    }]
+  },
+  options:{
+    responsive:true,indexAxis:'y',
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#9095b0',stepSize:2},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',font:{size:11}},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Border Late Table ──
+const blBody = document.getElementById('borderLateTbody');
+D.border_late_detail.forEach(d=>{
+  const records = d.records.map(r=>`${r.date} ${r.first_card}`).join(', ');
+  const countColor = d.count>=5?'color:var(--red)':d.count>=3?'color:var(--orange)':'';
+  blBody.innerHTML += `<tr>
+    <td><strong>${d.name}</strong></td><td>${d.emp_id}</td><td>${d.dept4}</td>
+    <td style="${countColor}"><strong>${d.count}次</strong></td>
+    <td style="font-size:11px;color:var(--text2)">${records}</td>
+  </tr>`;
+});
+
+// ── Absent Type Distribution ──
+new Chart(document.getElementById('chartAbsentType'),{
+  type:'doughnut',
+  data:{
+    labels: D.absent_category_dist.map(d=>d.category),
+    datasets:[{
+      data: D.absent_category_dist.map(d=>d.count),
+      backgroundColor: ['rgba(242,95,92,.75)','rgba(255,179,71,.75)','rgba(108,143,255,.75)'],
+      borderColor:'transparent'
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{
+      legend:{position:'right',labels:{color:'#9095b0',font:{size:11},boxWidth:10}},
+      tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed}次 (${D.absent_category_dist[ctx.dataIndex].rate}%)`}}
+    }
+  }
+});
+
+// ── Absent Duration Distribution ──
+new Chart(document.getElementById('chartAbsentDur'),{
+  type:'bar',
+  data:{
+    labels: D.absent_dur_dist.map(d=>d.duration),
+    datasets:[{
+      label:'缺勤次数',data: D.absent_dur_dist.map(d=>d.count),
+      backgroundColor: 'rgba(108,143,255,.7)',borderRadius:4
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#9095b0',font:{size:9}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',stepSize:2},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Absent Weekday Distribution ──
+new Chart(document.getElementById('chartAbsentWeekday'),{
+  type:'bar',
+  data:{
+    labels: D.absent_weekday_dist.map(d=>d.weekday),
+    datasets:[{
+      label:'缺勤次数',data: D.absent_weekday_dist.map(d=>d.absent),
+      backgroundColor: 'rgba(255,179,71,.7)',borderRadius:4
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',stepSize:2},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Consecutive Absent ──
+const consecC = document.getElementById('consecutiveContainer');
+if(D.consecutive_absent_summary.length===0){
+  consecC.innerHTML='<p style="color:var(--green);padding:16px;">✅ 无连续缺勤≥2天的记录</p>';
+}else{
+  let html='<table><thead><tr><th>姓名</th><th>部门</th><th>连续天数</th><th>起始日期</th></tr></thead><tbody>';
+  D.consecutive_absent_patterns.forEach(p=>{
+    html+=`<tr><td>${p.name}</td><td>${p.dept4}</td><td style="color:var(--orange)">${p.consecutive_days}天</td><td>${p.start_date}</td></tr>`;
+  });
+  html+='</tbody></table>';
+  html+=`<p style="font-size:11px;color:var(--text2);padding:8px;">共${D.consecutive_absent_patterns.length}段连续缺勤记录</p>`;
+  consecC.innerHTML=html;
+}
+
+// ── Fill-Absent Cross ──
+const faCont = document.getElementById('fillAbsentCrossContainer');
+if(D.fill_absent_cross.length===0){
+  faCont.innerHTML='<p style="color:var(--green);padding:16px;">✅ 无同时高频补卡+缺勤的人员</p>';
+}else{
+  let html='<table><thead><tr><th>姓名</th><th>部门</th><th>补卡次数</th><th>缺勤次数</th><th>补卡率</th></tr></thead><tbody>';
+  D.fill_absent_cross.forEach(d=>{
+    html+=`<tr><td>${d.name}</td><td>${d.dept4}</td><td style="color:var(--orange)">${d.fill_count}</td><td style="color:var(--red)">${d.absent_count}</td><td>${d.fill_rate}%</td></tr>`;
+  });
+  html+='</tbody></table>';
+  faCont.innerHTML=html;
+}
+
+// ── Chart 1: Dept Absent Rate ──
+new Chart(document.getElementById('chartDeptAbsent'),{
+  type:'bar',
+  data:{
+    labels: D.dept4_health.map(d=>d.dept),
+    datasets:[{
+      label:'缺勤率(%)',data: D.dept4_health.map(d=>d.absent_rate),
+      backgroundColor: D.dept4_health.map(d=>d.absent_rate>=2?'rgba(255,179,71,.8)':'rgba(76,175,125,.8)'),
+      borderRadius:4,order:1
+    },{
+      label:'警戒线(2%)',data: Array(D.dept4_health.length).fill(2),
+      type:'line',borderColor:'#f25f5c',borderDash:[4,4],borderWidth:2,
+      pointRadius:0,fill:false,order:0
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:true,
+    plugins:{legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales:{
+      x:{ticks:{color:'#9095b0',font:{size:10}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'},max:3}
+    }
+  }
+});
+
+// ── Chart: Dept Late Rate ──
+new Chart(document.getElementById('chartDeptLate'),{
+  type:'bar',
+  data:{
+    labels: D.dept4_health.map(d=>d.dept),
+    datasets:[{
+      label:'迟到率(%)',data: D.dept4_health.map(d=>d.late_rate),
+      backgroundColor: D.dept4_health.map(d=>d.late_rate>=3?'rgba(242,95,92,.8)':d.late_rate>=1.5?'rgba(255,179,71,.8)':'rgba(76,175,125,.8)'),
+      borderRadius:4
+    },{
+      label:'其中边界迟到%',data: D.dept4_health.map(d=>(d.border_late/d.total*100).toFixed(1)),
+      backgroundColor:'rgba(54,201,198,.5)',borderRadius:4
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales:{
+      x:{ticks:{color:'#9095b0',font:{size:10}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',callback:v=>v+'%'},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Dept Health Table ──
+const dtBody = document.getElementById('deptHealthTbody');
+D.dept4_health.forEach(d=>{
+  const riskCls = d.risk==='HIGH'?'risk-H':d.risk==='MED'?'risk-M':'risk-L';
+  const riskLbl = d.risk==='HIGH'?'🔴 高风险':d.risk==='MED'?'🟡 关注':'🟢 正常';
+  const lrColor = d.late_rate>=3?'color:var(--red)':d.late_rate>=1.5?'color:var(--orange)':'';
+  dtBody.innerHTML += `<tr>
+    <td><strong>${d.dept}</strong></td><td>${d.headcount}</td><td>${d.total}</td>
+    <td>${d.absent}</td><td style="color:${d.absent_rate>=2?'var(--orange)':'var(--green)'}"><strong>${d.absent_rate}%</strong></td>
+    <td style="${lrColor}"><strong>${d.late}</strong></td><td style="${lrColor}"><strong>${d.late_rate}%</strong></td>
+    <td style="color:var(--teal)">${d.border_late}</td>
+    <td>${d.early}</td><td>${d.early_rate}%</td>
+    <td>${d.avg_overtime_hrs}</td>
+    <td class="tbl-risk"><span class="risk-tag ${riskCls}">${riskLbl}</span></td>
+  </tr>`;
+});
+
+// ── Weekday Late Chart ──
+new Chart(document.getElementById('chartWeekdayLate'),{
+  type:'bar',
+  data:{
+    labels: D.weekday_late.map(d=>d.weekday),
+    datasets:[{
+      label:'迟到人次',data: D.weekday_late.map(d=>d.late),
+      backgroundColor: D.weekday_late.map(d=>d.weekday==='周四'?'rgba(242,95,92,.8)':'rgba(108,143,255,.6)'),
+      borderRadius:6,yAxisID:'y'
+    },{
+      label:'迟到率(%)',data: D.weekday_late.map(d=>d.late_rate),
+      type:'line',borderColor:'#ffb347',borderWidth:2,pointRadius:4,
+      pointBackgroundColor:'#ffb347',fill:false,yAxisID:'y1'
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales:{
+      x:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'},title:{display:true,text:'人次',color:'#9095b0'}},
+      y1:{position:'right',ticks:{color:'#ffb347',callback:v=>v+'%'},grid:{display:false},max:4}
+    }
+  }
+});
+
+// ── Checkin Distribution ──
+const ciLabels = D.checkin_dist.map(d=>d.time);
+const ciData   = D.checkin_dist.map(d=>d.count);
+const ciColors = ciLabels.map(t=>{
+  const h=parseInt(t.split(':')[0]),m=parseInt(t.split(':')[1]);
+  const mins=h*60+m;
+  if(mins<9*60+30) return 'rgba(54,201,198,.7)';
+  if(mins<10*60+10) return 'rgba(76,175,125,.7)';
+  if(mins<=10*60+15) return 'rgba(255,179,71,.8)';
+  return 'rgba(242,95,92,.8)';
+});
+new Chart(document.getElementById('chartCheckin'),{
+  type:'bar',
+  data:{labels:ciLabels,datasets:[{label:'打卡人次',data:ciData,backgroundColor:ciColors,borderRadius:3}]},
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false},
+      tooltip:{callbacks:{afterLabel:ctx=>{
+        const t=ctx.label,h=parseInt(t.split(':')[0]),m=parseInt(t.split(':')[1]);
+        const mins=h*60+m;
+        if(mins<9*60+30) return '⏰ 早到';
+        if(mins<=10*60+10) return '✅ 弹性窗口内';
+        if(mins<=10*60+15) return '⚠️ 边界迟到(新规则)';
+        return '❗ 迟到';
+      }}}
+    },
+    scales:{
+      x:{ticks:{color:'#9095b0',font:{size:9},maxRotation:60},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Date Late Table ──
+const dlBody = document.getElementById('dateLateBody');
+D.date_late_top.slice(0,10).forEach(d=>{
+  dlBody.innerHTML += `<tr><td>${d.date}</td><td><span style="color:var(--red)">${d.late}</span></td><td>${d.total}</td><td>${d.rate}%</td></tr>`;
+});
+
+// ── Late ≥3 Table ──
+const l3Body = document.getElementById('late3Tbody');
+if(D.late3_persons.length===0){
+  l3Body.innerHTML='<tr><td colspan="5" style="color:var(--green)">✅ 无迟到≥3次/月人员</td></tr>';
+}else{
+  D.late3_persons.forEach(d=>{
+    l3Body.innerHTML+=`<tr><td>${d.name}</td><td>${d.emp_id}</td><td>${d.dept4}</td><td>${d.month}</td><td style="color:var(--red)"><strong>${d.late_count}次</strong></td></tr>`;
+  });
+}
+
+// ── OT Chart ──
+const otTop15 = D.imbalance_ot.slice(0,15);
+new Chart(document.getElementById('chartOT'),{
+  type:'bar',
+  data:{
+    labels: otTop15.map(d=>d.name),
+    datasets:[{
+      label:'加班时长(h)',data: otTop15.map(d=>d.overtime_hrs),
+      backgroundColor:'rgba(242,95,92,.75)',borderRadius:4
+    }]
+  },
+  options:{
+    responsive:true,indexAxis:'y',
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',font:{size:10}},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Dept OT Chart ──
+new Chart(document.getElementById('chartDeptOT'),{
+  type:'bar',
+  data:{
+    labels: D.dept4_overtime.map(d=>d.dept),
+    datasets:[{
+      label:'人均加班时长(h)',
+      data: D.dept4_overtime.map(d=>d.avg_overtime_hrs),
+      backgroundColor: D.dept4_overtime.map((d,i)=>i<2?'rgba(242,95,92,.8)':i<4?'rgba(255,179,71,.7)':'rgba(108,143,255,.6)'),
+      borderRadius:4
+    }]
+  },
+  options:{
+    responsive:true,indexAxis:'y',
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',font:{size:10}},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Imbalance Table ──
+const imBody = document.getElementById('imbalanceTbody');
+D.imbalance_ot.forEach(d=>{
+  const rc = d.risk==='HIGH'?'risk-H':'risk-M';
+  const rl = d.risk==='HIGH'?'🔴 高风险':'🟡 关注';
+  imBody.innerHTML += `<tr>
+    <td>${d.name}</td><td>${d.emp_id}</td><td>${d.dept4}</td>
+    <td style="color:var(--red)">${d.overtime_hrs}</td><td>${d.overtime_days}</td>
+    <td>${d.leave_days||0}</td>
+    <td style="color:${d.rest_ratio<10?'var(--red)':'var(--orange)'}">${d.rest_ratio}%</td>
+    <td><span class="risk-tag ${rc}">${rl}</span></td>
+  </tr>`;
+});
+
+// ── Personal Absent Chart ──
+const paTop15 = D.top_absent_persons.slice(0,15);
+new Chart(document.getElementById('chartPersonAbsent'),{
+  type:'bar',
+  data:{
+    labels: paTop15.map(d=>d.name),
+    datasets:[{
+      label:'缺勤天数',data: paTop15.map(d=>d.absent_days),
+      backgroundColor: paTop15.map(d=>d.absent_rate>=10?'rgba(242,95,92,.8)':d.absent_rate>=5?'rgba(255,179,71,.8)':'rgba(108,143,255,.6)'),
+      borderRadius:4,order:2
+    },{
+      label:'加班(h)/5',data: paTop15.map(d=>d.absent_hours/5),
+      backgroundColor:'rgba(54,201,198,.4)',borderRadius:4,order:3
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales:{
+      x:{ticks:{color:'#9095b0',font:{size:10}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Absent Detail Table ──
+const atBody = document.getElementById('absentDetailTbody');
+D.top_absent_persons.slice(0,12).forEach(d=>{
+  const rc = d.absent_rate>=10?'color:var(--red)':d.absent_rate>=5?'color:var(--orange)':'';
+  atBody.innerHTML += `<tr>
+    <td><strong>${d.name}</strong></td><td>${d.dept4}</td>
+    <td style="${rc}"><strong>${d.absent_days}</strong></td><td style="${rc}"><strong>${d.absent_rate}%</strong></td>
+    <td>${d.late_days}</td><td style="color:var(--teal)">${d.border_reclass}</td>
+    <td>${d.consecutive_max>0?'<span style="color:var(--orange)">'+d.consecutive_max+'天</span>':'无'}</td>
+    <td style="font-size:11px;color:var(--text2)">${d.primary_type}</td>
+  </tr>`;
+});
+
+// ── Monthly Trend Chart ──
+new Chart(document.getElementById('chartMonthly'),{
+  type:'bar',
+  data:{
+    labels: D.monthly_trend.map(d=>d.month),
+    datasets:[
+      {label:'缺勤率(%)',data: D.monthly_trend.map(d=>d.absent_rate),
+       backgroundColor:'rgba(242,95,92,.7)',borderRadius:6,yAxisID:'y'},
+      {label:'迟到率(%)',data: D.monthly_trend.map(d=>d.late_rate),
+       backgroundColor:'rgba(108,143,255,.7)',borderRadius:6,yAxisID:'y'},
+      {label:'早退率(%)',data: D.monthly_trend.map(d=>d.early_rate),
+       backgroundColor:'rgba(255,179,71,.7)',borderRadius:6,yAxisID:'y'},
+    ]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales:{
+      x:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',callback:v=>v+'%'},grid:{color:'rgba(45,49,72,.4)'},max:3}
+    }
+  }
+});
+
+// ── Monthly Reclass Chart ──
+new Chart(document.getElementById('chartMonthlyReclass'),{
+  type:'bar',
+  data:{
+    labels: D.monthly_trend.map(d=>d.month),
+    datasets:[
+      {label:'原始缺勤',data: D.monthly_trend.map(d=>d.absent_orig),
+       backgroundColor:'rgba(242,95,92,.5)',borderRadius:6},
+      {label:'边界转迟到',data: D.monthly_trend.map(d=>d.border_late),
+       backgroundColor:'rgba(54,201,198,.7)',borderRadius:6},
+      {label:'真实缺勤',data: D.monthly_trend.map(d=>d.absent_count),
+       backgroundColor:'rgba(242,95,92,.8)',borderRadius:6}
+    ]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales:{
+      x:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',stepSize:10},grid:{color:'rgba(45,49,72,.4)'},title:{display:true,text:'条数',color:'#9095b0'}}
+    }
+  }
+});
+
+// ═══════════════ v4 关联分析渲染 ═══════════════
+
+// ── Insight Grid ──
+const ig = document.getElementById('insightGrid');
+C.correlation_insights.forEach(ins => {
+  ig.innerHTML += `<div class="insight-card">
+    <div class="insight-title">${ins.title}</div>
+    <div class="insight-detail">${ins.detail}</div>
+  </div>`;
+});
+
+// ── Late→OT Chart ──
+new Chart(document.getElementById('chartLateOT'), {
+  type: 'bar',
+  data: {
+    labels: C.late_ot_correlation.map(d=>d.group),
+    datasets: [{
+      label: '人均加班(h)', data: C.late_ot_correlation.map(d=>d.avg_overtime_hrs),
+      backgroundColor: ['rgba(76,175,125,.7)','rgba(108,143,255,.7)','rgba(255,179,71,.7)','rgba(242,95,92,.8)'],
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>ctx.raw+'h · '+C.late_ot_correlation[ctx.dataIndex].count+'人'}}},
+    scales:{
+      x:{ticks:{color:'#9095b0',font:{size:11}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'},title:{display:true,text:'人均加班(h)',color:'#9095b0'}}
+    }
+  }
+});
+
+// ── Fill→Cross Chart ──
+new Chart(document.getElementById('chartFillCross'), {
+  type: 'line',
+  data: {
+    labels: C.fill_cross_analysis.map(d=>d.group),
+    datasets: [
+      {label:'迟到率(%)',data:C.fill_cross_analysis.map(d=>d.late_rate),
+       borderColor:'#f25f5c',backgroundColor:'rgba(242,95,92,.2)',tension:.3,fill:true,yAxisID:'y'},
+      {label:'缺勤率(%)',data:C.fill_cross_analysis.map(d=>d.absent_rate),
+       borderColor:'#ffb347',backgroundColor:'rgba(255,179,71,.2)',tension:.3,fill:true,yAxisID:'y1'}
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales: {
+      x:{ticks:{color:'#9095b0',font:{size:11}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{position:'left',ticks:{color:'#f25f5c',callback:v=>v+'%'},grid:{color:'rgba(45,49,72,.4)'},min:0},
+      y1:{position:'right',ticks:{color:'#ffb347',callback:v=>v+'%'},grid:{display:false},min:0}
+    }
+  }
+});
+
+// ── Absent Profile Table ──
+const apBody = document.getElementById('absentProfileTbody');
+C.absent_top5_profile.forEach(d=>{
+  apBody.innerHTML += `<tr>
+    <td><strong>${d.name}</strong></td><td>${d.dept4}</td>
+    <td style="color:var(--red)">${d.absent_days}</td><td style="color:var(--red)">${d.absent_rate}%</td>
+    <td style="color:var(--orange)">${d.late_days}</td><td style="color:var(--accent)">${d.ot_hrs}</td>
+    <td>${d.fill_count}</td><td style="color:var(--teal)">${d.border_late}</td>
+    <td>${d.absent_mon}</td><td>${d.absent_fri}</td>
+    <td style="color:var(--text2);font-size:11px">${d.avg_first_card}</td>
+    <td style="color:var(--yellow);font-size:11px">${d.avg_last_card}</td>
+  </tr>`;
+});
+
+// ── Shift Compare Chart ──
+new Chart(document.getElementById('chartShiftCompare'), {
+  type: 'bar',
+  data: {
+    labels: C.shift_type_compare.map(d=>d.shift_type),
+    datasets: [
+      {label:'缺勤率(%)',data:C.shift_type_compare.map(d=>d.absent_rate),
+       backgroundColor:'rgba(242,95,92,.75)',borderRadius:6},
+      {label:'迟到率(%)',data:C.shift_type_compare.map(d=>d.late_rate),
+       backgroundColor:'rgba(108,143,255,.75)',borderRadius:6},
+      {label:'边界迟到率(%)',data:C.shift_type_compare.map(d=>d.border_late_rate),
+       backgroundColor:'rgba(54,201,198,.75)',borderRadius:6}
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales: {
+      x:{ticks:{color:'#9095b0',font:{size:11}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',callback:v=>v+'%'},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Risk Score Table ──
+const rsBody = document.getElementById('riskScoreTbody');
+C.risk_scores.forEach(d=>{
+  const emoji = d.risk_level.substring(0,2);
+  rsBody.innerHTML += `<tr>
+    <td>${d.risk_level}</td><td><strong>${d.name}</strong></td><td style="font-size:11px">${d.dept4}</td>
+    <td style="color:${d.risk_score>=7?'var(--red)':d.risk_score>=5?'var(--orange)':'var(--accent)'}"><strong>${d.risk_score}</strong></td>
+    <td>${d.absent_days}</td><td>${d.late_days}</td><td>${d.fill_count}</td><td>${d.border_late}</td>
+    <td>${d.absent_rate}%</td><td>${d.fill_rate}%</td>
+  </tr>`;
+});
+
+// ── Ten-Day Trend Chart ──
+new Chart(document.getElementById('chartTenDay'), {
+  type: 'bar',
+  data: {
+    labels: C.ten_day_trend.map(d=>d.period),
+    datasets: [
+      {label:'缺勤率(%)',data:C.ten_day_trend.map(d=>d.absent_rate),
+       backgroundColor:'rgba(242,95,92,.75)',borderRadius:6},
+      {label:'迟到率(%)',data:C.ten_day_trend.map(d=>d.late_rate),
+       backgroundColor:'rgba(108,143,255,.75)',borderRadius:6},
+      {label:'边界迟到率(%)',data:C.ten_day_trend.map(d=>d.border_late_rate),
+       backgroundColor:'rgba(54,201,198,.75)',borderRadius:6}
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales: {
+      x:{ticks:{color:'#9095b0',font:{size:11}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{ticks:{color:'#9095b0',callback:v=>v+'%'},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Anomaly Dates Chart ──
+const adTop = C.anomaly_dates.slice(0,10);
+new Chart(document.getElementById('chartAnomalyDates'), {
+  type: 'bar',
+  data: {
+    labels: adTop.map(d=>d.date),
+    datasets: [
+      {label:'缺勤',data:adTop.map(d=>d.absent),backgroundColor:'rgba(242,95,92,.8)',stack:'s1',borderRadius:4},
+      {label:'迟到',data:adTop.map(d=>d.late),backgroundColor:'rgba(108,143,255,.7)',stack:'s1',borderRadius:4}
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{position:'top',labels:{color:'#9095b0',boxWidth:10,font:{size:10}}}},
+    scales: {
+      x:{ticks:{color:'#9095b0',font:{size:10}},grid:{color:'rgba(45,49,72,.4)'}},
+      y:{stacked:true,ticks:{color:'#9095b0'},grid:{color:'rgba(45,49,72,.4)'}}
+    }
+  }
+});
+
+// ── Border Late Cross Table ──
+const blBody = document.getElementById('borderLateCrossTbody');
+C.border_late_emp_overtime.slice(0,8).forEach(d=>{
+  blBody.innerHTML += `<tr>
+    <td><strong>${d.name}</strong></td><td>${d.dept4}</td>
+    <td style="color:var(--teal)">${d.border_late_count}</td>
+    <td style="color:var(--accent)">${d.overtime_hrs}</td>
+    <td style="color:var(--orange)">${d.late_count}</td>
+    <td>${d.absent_count}</td>
+    <td style="color:var(--yellow)">${d.avg_end_time}</td>
+  </tr>`;
+});
+
+// ── Suggestions Section ──
+const sb = document.getElementById('suggestionsBody');
+S.forEach((s,i) => {
+  sb.innerHTML += `<div class="suggestion-card">
+    <div class="suggestion-header">
+      <span class="suggestion-idx">${i+1}</span>
+      <span class="suggestion-cat">${s.category}</span>
+      <span class="suggestion-title">${s.title}</span>
+    </div>
+    <div class="suggestion-body">${s.detail}</div>
+    <div class="suggestion-target">🎯 重点对象：${s.target}</div>
+  </div>`;
+});
+
+// ── Add missing CSS for new sections ──
+const style = document.createElement('style');
+style.textContent = `
+  .full-panel{background:var(--card);border-radius:10px;border:1px solid var(--border);margin-bottom:12px;overflow:hidden;}
+  .full-panel .panel-header{padding:12px 20px;border-bottom:1px solid var(--border2);font-weight:700;font-size:14px;}
+  .insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .insight-card{background:var(--card2);border-radius:8px;padding:14px 16px;border-left:3px solid var(--accent);}
+  .insight-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px;}
+  .insight-detail{font-size:11px;color:var(--text2);line-height:1.6;}
+  .suggestion-card{background:var(--card2);margin:8px 16px;border-radius:8px;padding:14px 18px;border-left:3px solid var(--green);}
+  .suggestion-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .suggestion-idx{width:22px;height:22px;border-radius:50%;background:var(--green);color:var(--bg);text-align:center;line-height:22px;font-size:11px;font-weight:700;flex-shrink:0;}
+  .suggestion-cat{font-size:10px;color:var(--teal);background:rgba(54,201,198,.12);padding:2px 8px;border-radius:4px;}
+  .suggestion-title{font-size:13px;font-weight:700;color:var(--text);}
+  .suggestion-body{font-size:12px;color:var(--text2);line-height:1.75;margin-bottom:6px;}
+  .suggestion-target{font-size:11px;color:var(--orange);font-weight:600;}
+  .risk-tag{font-size:10px;padding:1px 6px;border-radius:3px;}
+  .risk-H{color:var(--red);background:var(--red-bg);}
+  .risk-M{color:var(--orange);background:var(--orange-bg);}
+`;
+document.head.appendChild(style);
+
+</script>
+</body>
+</html>
