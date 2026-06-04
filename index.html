@@ -177,6 +177,39 @@ canvas { max-height: 340px; }
   </div>
 </div>
 
+<!-- 3b. 加班维度深度分析 -->
+<div class="section">
+  <div class="section-title"><span class="icon" style="background:#E67E22">3+</span> 加班维度深度分析</div>
+  <!-- KPI cards -->
+  <div class="kpi-row" id="otKPI"></div>
+  <!-- Charts row 1 -->
+  <div class="grid3">
+    <div class="card">
+      <h3>加班严重程度分布</h3>
+      <div class="chart-wrap"><canvas id="chartOtSeverity"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>加班来源构成 <span style="font-size:11px;color:#999;font-weight:400">（工作日/休息日/节假日）</span></h3>
+      <div class="chart-wrap"><canvas id="chartOtSource"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>周度加班分布</h3>
+      <div class="chart-wrap"><canvas id="chartOtWeekday"></canvas></div>
+    </div>
+  </div>
+  <!-- Charts row 2 -->
+  <div class="grid2">
+    <div class="card">
+      <h3>部门月度加班趋势</h3>
+      <div class="chart-wrap"><canvas id="chartOtDeptTrend"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>加班时长 Top15 员工</h3>
+      <div style="max-height:380px;overflow-y:auto" id="otTop15Table"></div>
+    </div>
+  </div>
+</div>
+
 <!-- 4. 疑似风险模式 -->
 <div class="section">
   <div class="section-title"><span class="icon" style="background:#9B59B6">4</span> 疑似风险模式识别</div>
@@ -1489,6 +1522,243 @@ const DATA = {
         }
       ]
     }
+  },
+  "overtime_analysis": {
+    "total_overtime_h": 6540.3,
+    "avg_overtime_h": 52.7,
+    "over40_count": 77,
+    "over60_count": 46,
+    "workday_ot_h": 5851.1,
+    "restday_ot_h": 678.5,
+    "holiday_ot_h": 10.7,
+    "severity_dist": {
+      "无加班(0h)": 0,
+      "轻度(0-20h)": 26,
+      "中度(20-40h)": 21,
+      "重度(40-60h)": 31,
+      "极重(60h+)": 46
+    },
+    "top15": [
+      {
+        "name": "卢博文",
+        "org4": "中转质控交付组",
+        "total_ot": 139.0,
+        "comp_leave": 10.1,
+        "comp_ratio": 7.2
+      },
+      {
+        "name": "蒋秋柏",
+        "org4": "中转质控交付组",
+        "total_ot": 133.1,
+        "comp_leave": 9.0,
+        "comp_ratio": 6.8
+      },
+      {
+        "name": "卢明敏",
+        "org4": "中转质控交付组",
+        "total_ot": 125.2,
+        "comp_leave": 0,
+        "comp_ratio": 0.0
+      },
+      {
+        "name": "彭海龙",
+        "org4": "中转质控交付组",
+        "total_ot": 123.1,
+        "comp_leave": 0,
+        "comp_ratio": 0.0
+      },
+      {
+        "name": "刘思艳",
+        "org4": "终端客服交付组",
+        "total_ot": 118.5,
+        "comp_leave": 0,
+        "comp_ratio": 0.0
+      },
+      {
+        "name": "赵潘婷",
+        "org4": "数据分析组",
+        "total_ot": 113.5,
+        "comp_leave": 2.9,
+        "comp_ratio": 2.6
+      },
+      {
+        "name": "许源钦",
+        "org4": "中转质控交付组",
+        "total_ot": 109.4,
+        "comp_leave": 0,
+        "comp_ratio": 0.0
+      },
+      {
+        "name": "廖杰",
+        "org4": "中转质控交付组",
+        "total_ot": 108.5,
+        "comp_leave": 10.5,
+        "comp_ratio": 9.7
+      },
+      {
+        "name": "廖祥",
+        "org4": "中转质控交付组",
+        "total_ot": 108.4,
+        "comp_leave": 8.0,
+        "comp_ratio": 7.4
+      },
+      {
+        "name": "陈庆标",
+        "org4": "中转质控交付组",
+        "total_ot": 106.1,
+        "comp_leave": 4.6,
+        "comp_ratio": 4.3
+      },
+      {
+        "name": "周鹊伟",
+        "org4": "终端客服交付组",
+        "total_ot": 105.9,
+        "comp_leave": 0,
+        "comp_ratio": 0.0
+      },
+      {
+        "name": "龙垒",
+        "org4": "中转质控交付组",
+        "total_ot": 102.2,
+        "comp_leave": 7.0,
+        "comp_ratio": 6.8
+      },
+      {
+        "name": "李孝德",
+        "org4": "终端客服交付组",
+        "total_ot": 96.5,
+        "comp_leave": 0,
+        "comp_ratio": 0.0
+      },
+      {
+        "name": "别少雄",
+        "org4": "中转质控交付组",
+        "total_ot": 92.8,
+        "comp_leave": 8.0,
+        "comp_ratio": 8.6
+      },
+      {
+        "name": "魏垚鑫",
+        "org4": "中转质控交付组",
+        "total_ot": 90.5,
+        "comp_leave": 20.0,
+        "comp_ratio": 22.1
+      }
+    ],
+    "org4_monthly_ot": {
+      "数据分析组": [
+        {
+          "month": "2026-04",
+          "overtime": 297.4
+        },
+        {
+          "month": "2026-05",
+          "overtime": 235.8
+        }
+      ],
+      "项目与运营管理组": [
+        {
+          "month": "2026-04",
+          "overtime": 172.6
+        },
+        {
+          "month": "2026-05",
+          "overtime": 105.2
+        }
+      ],
+      "中转质控交付组": [
+        {
+          "month": "2026-04",
+          "overtime": 1467.3
+        },
+        {
+          "month": "2026-05",
+          "overtime": 1279.4
+        }
+      ],
+      "终端客服交付组": [
+        {
+          "month": "2026-04",
+          "overtime": 1368.6
+        },
+        {
+          "month": "2026-05",
+          "overtime": 1062.4
+        }
+      ],
+      "业务解决方案组": [
+        {
+          "month": "2026-04",
+          "overtime": 139.0
+        },
+        {
+          "month": "2026-05",
+          "overtime": 77.8
+        }
+      ],
+      "技术支持组": [
+        {
+          "month": "2026-04",
+          "overtime": 92.1
+        },
+        {
+          "month": "2026-05",
+          "overtime": 77.3
+        }
+      ],
+      "系统架构组": [
+        {
+          "month": "2026-04",
+          "overtime": 45.2
+        },
+        {
+          "month": "2026-05",
+          "overtime": 51.0
+        }
+      ],
+      "业务流程管理组": [
+        {
+          "month": "2026-04",
+          "overtime": 36.2
+        },
+        {
+          "month": "2026-05",
+          "overtime": 32.8
+        }
+      ]
+    },
+    "ot_by_weekday": [
+      {
+        "weekday": "周一",
+        "overtime": 979.4
+      },
+      {
+        "weekday": "周二",
+        "overtime": 1215.2
+      },
+      {
+        "weekday": "周三",
+        "overtime": 1497.0
+      },
+      {
+        "weekday": "周四",
+        "overtime": 1317.5
+      },
+      {
+        "weekday": "周五",
+        "overtime": 771.0
+      }
+    ],
+    "monthly_ot": [
+      {
+        "month": "2026-04",
+        "overtime": 3618.4
+      },
+      {
+        "month": "2026-05",
+        "overtime": 2921.9
+      }
+    ]
   }
 };
 // ===== KPI Cards =====
@@ -1657,6 +1927,78 @@ function renderOvertime() {
     html += `<div class="alert-box alert-warning" style="margin-top:10px;font-size:13px">⚠️ <strong>${imbalancedCount}名</strong>员工调休比例<30%，建议HR跟进调休安排</div>`;
   }
   document.getElementById('otImbalanceTable').innerHTML = html;
+}
+
+// ===== 3b. Overtime Deep Analysis =====
+function renderOvertimeDeep() {
+  const oa = DATA.overtime_analysis;
+  if (!oa) return;
+
+  // KPI cards
+  const restPct = oa.total_overtime_h > 0 ? ((oa.restday_ot_h + oa.holiday_ot_h) / oa.total_overtime_h * 100).toFixed(1) : 0;
+  document.getElementById('otKPI').innerHTML = `
+    <div class="kpi-card"><div class="kpi-value">${oa.total_overtime_h}<span class="kpi-unit">h</span></div><div class="kpi-label">总加班时长</div></div>
+    <div class="kpi-card"><div class="kpi-value">${oa.avg_overtime_h}<span class="kpi-unit">h</span></div><div class="kpi-label">人均加班</div></div>
+    <div class="kpi-card" style="border-top-color:${oa.over40_count>20?'#E74C3C':'#27AE60'}"><div class="kpi-value" style="color:${oa.over40_count>20?'#E74C3C':'#27AE60'}">${oa.over40_count}<span class="kpi-unit">人</span></div><div class="kpi-label">加班>40h人数</div></div>
+    <div class="kpi-card" style="border-top-color:${oa.over60_count>10?'#E74C3C':'#F39C12'}"><div class="kpi-value" style="color:${oa.over60_count>10?'#E74C3C':'#F39C12'}">${oa.over60_count}<span class="kpi-unit">人</span></div><div class="kpi-label">加班>60h人数</div></div>
+    <div class="kpi-card"><div class="kpi-value">${restPct}<span class="kpi-unit">%</span></div><div class="kpi-label">休息日加班占比</div></div>
+  `;
+
+  // Severity doughnut
+  const sd = oa.severity_dist;
+  new Chart(document.getElementById('chartOtSeverity'), {
+    type:'doughnut', data:{ labels:Object.keys(sd), datasets:[{ data:Object.values(sd),
+      backgroundColor:['#95a5a6','#27AE60','#F39C12','#E74C3C','#8E1600'], borderWidth:2, borderColor:'#fff'
+    }]}, options:{ responsive:true, plugins:{ legend:{position:'bottom',labels:{font:{size:11},usePointStyle:true,padding:8}} } }
+  });
+
+  // Source pie
+  new Chart(document.getElementById('chartOtSource'), {
+    type:'doughnut', data:{ labels:['工作日加班','休息日加班','节假日加班'], datasets:[{ data:[oa.workday_ot_h, oa.restday_ot_h, oa.holiday_ot_h],
+      backgroundColor:['#4A6CF7','#F39C12','#E74C3C'], borderWidth:2, borderColor:'#fff'
+    }]}, options:{ responsive:true, plugins:{ legend:{position:'bottom',labels:{font:{size:11},usePointStyle:true,padding:8}} } }
+  });
+
+  // Weekday OT bar
+  const wd = oa.ot_by_weekday;
+  new Chart(document.getElementById('chartOtWeekday'), {
+    type:'bar', data:{ labels:wd.map(x=>x.weekday), datasets:[{ label:'加班(h)', data:wd.map(x=>x.overtime),
+      backgroundColor:['#4A6CF7','#5B7CF7','#6C8CF7','#7D9CF7','#8EACF7'], borderRadius:8, barThickness:36
+    }]}, options:{ responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true,grid:{color:'#f0f1f3'}}, x:{grid:{display:false}} } }
+  });
+
+  // Dept monthly trend (grouped bar)
+  const deptOt = oa.org4_monthly_ot;
+  const months = [...new Set(Object.values(deptOt).flat().map(x=>x.month))].sort();
+  const deptColors = ['#E74C3C','#4A6CF7','#F39C12','#27AE60','#9B59B6','#1ABC9C','#E67E22','#6C5CE7'];
+  const datasets = Object.entries(deptOt).map(([dept, data], i) => ({
+    label: dept.replace(/组$/,''),
+    data: months.map(m => (data.find(d=>d.month===m)||{}).overtime || 0),
+    backgroundColor: deptColors[i % deptColors.length] + 'CC',
+    borderRadius: 4, barThickness: 14,
+  }));
+  new Chart(document.getElementById('chartOtDeptTrend'), {
+    type:'bar', data:{ labels:months.map(m=>m.replace('2026-','')), datasets }, options:{
+      responsive:true, plugins:{ legend:{position:'bottom',labels:{font:{size:10},usePointStyle:true,padding:6}} },
+      scales:{ y:{beginAtZero:true,grid:{color:'#f0f1f3'}}, x:{grid:{display:false}} }
+    }
+  });
+
+  // Top15 table
+  let html = '<table><tr><th>#</th><th>姓名</th><th>部门</th><th>总加班</th><th>调休假</th><th>调休比</th><th>风险</th></tr>';
+  oa.top15.forEach((x,i)=>{
+    const risk = x.comp_ratio < 30;
+    const otRisk = x.total_ot > 60;
+    html += `<tr style="${risk||otRisk?'background:rgba(231,76,60,0.04)':''}">
+      <td>${i+1}</td><td style="font-weight:600">${x.name}</td><td style="font-size:12px">${x.org4}</td>
+      <td><strong style="color:${otRisk?'#E74C3C':'#333'}">${x.total_ot}h</strong></td>
+      <td>${x.comp_leave}h</td>
+      <td><strong style="color:${risk?'#E74C3C':'#27AE60'}">${x.comp_ratio}%</strong></td>
+      <td>${otRisk?'<span class="badge badge-danger">过劳</span>':''}${risk?'<span class="badge badge-warning">调休失衡</span>':''}${!otRisk&&!risk?'<span class="badge badge-success">正常</span>':''}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  document.getElementById('otTop15Table').innerHTML = html;
 }
 
 // ===== 4. Risk Patterns =====
@@ -1994,6 +2336,7 @@ renderHealth();
 renderTrend();
 renderLate();
 renderOvertime();
+renderOvertimeDeep();
 renderRiskPatterns();
 renderRootCause();
 renderRiskTable();
